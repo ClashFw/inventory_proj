@@ -11,9 +11,12 @@ private:
     int currentCol;
 public:
     Inventory();
+    ~Inventory();
     void display();
     bool addItem(Item* item);
 
+    //getters & setters
+    void clear();
     int getRows() const;
     void setRows(int newRows);
     int getCols() const;
