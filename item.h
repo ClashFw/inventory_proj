@@ -32,6 +32,7 @@ public:
     void setPrice(int newPrice);
     //other methods
     void use();
+    void displayItemInfo() const;
 };
 
 #endif // ITEM_H

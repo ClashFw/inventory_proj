@@ -8,11 +8,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_executable(inventory main.cpp
     item.h item.cpp
     inventory.h inventory.cpp
-        Player.cpp
-        Player.h
-        Game.cpp
-        Game.h
-        singleCharacter.h
+    player.cpp
+    player.h
+    game.cpp
+    game.h
+    singleCharacter.h
 )
 
 include(GNUInstallDirs)

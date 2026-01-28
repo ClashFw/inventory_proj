@@ -13,7 +13,9 @@ public:
     Inventory();
     ~Inventory();
     void display();
+    void displayWithItemInfo(Item* item);
     bool addItem(Item* item);
+    Item* getCurrentItem() const;
 
     //getters & setters
     void clear();

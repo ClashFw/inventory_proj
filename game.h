@@ -10,6 +10,7 @@ public:
     Game();
     ~Game();
     void play();
+    void initializeSampleItems();
     Player *getPlayer() const;
     void setPlayer(Player *newPlayer);
 };

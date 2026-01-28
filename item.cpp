@@ -1,4 +1,5 @@
 #include "item.h"
+#include <iostream>
 
 std::string Item::getName() const
 {
@@ -70,7 +71,6 @@ Item::Item(const std::string &name, int price)
     level(1),
     price(price)
 {
-    srand(time(NULL));
     int randNum = rand() % 101;
     if(randNum < 60) {
         rarity = common;
@@ -81,4 +81,28 @@ Item::Item(const std::string &name, int price)
     else {
         rarity = rare;
     }
+}
+
+void Item::displayItemInfo() const
+{
+    std::cout << "\n=== Item Information ===" << std::endl;
+    std::cout << "Name: " << name << std::endl;
+    std::cout << "Price: " << price << std::endl;
+    std::cout << "Durability: " << durability << std::endl;
+    std::cout << "Level: " << level << std::endl;
+    std::cout << "Rarity: ";
+    switch(rarity) {
+        case common:
+            std::cout << "Common";
+            break;
+        case magic:
+            std::cout << "Magic";
+            break;
+        case rare:
+            std::cout << "Rare";
+            break;
+    }
+    std::cout << std::endl;
+    std::cout << "========================" << std::endl;
+    std::cout << "Press any key to continue..." << std::endl;
 }

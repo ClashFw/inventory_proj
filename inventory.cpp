@@ -127,6 +127,62 @@ void Inventory::display()
     }
 }
 
+void Inventory::displayWithItemInfo(Item* item)
+{
+    // Get item info lines
+    std::string itemLines[7];
+    itemLines[0] = "=== Item Information ===";
+    itemLines[1] = "Name: " + item->getName();
+    itemLines[2] = "Price: " + std::to_string(item->getPrice());
+    itemLines[3] = "Durability: " + std::to_string(item->getDurability());
+    itemLines[4] = "Level: " + std::to_string(item->getLevel());
+    itemLines[5] = "Rarity: ";
+    switch(item->getRarity()) {
+        case common:
+            itemLines[5] += "Common";
+            break;
+        case magic:
+            itemLines[5] += "Magic";
+            break;
+        case rare:
+            itemLines[5] += "Rare";
+            break;
+    }
+    itemLines[6] = "========================";
+
+    // Display inventory and item info side by side
+    for(int i = 0; i < rows; i++) {
+        // Display inventory row
+        for(int j = 0; j < cols; j++) {
+            if(i == currentRow && j == currentCol) {
+                std::cout << "{";
+            }
+            else {
+                std::cout << "[";
+            }
+            if(items[i][j] == nullptr) {
+                std::cout << " ";
+            }
+            else {
+                std::cout << char(toupper(items[i][j]->getName()[0]));
+            }
+            if(i == currentRow && j == currentCol) {
+                std::cout << "}";
+            }
+            else {
+                std::cout << "]";
+            }
+        }
+
+        // Add spacing and item info
+        std::cout << "    ";
+        if(i < 7) {
+            std::cout << itemLines[i];
+        }
+        std::cout << std::endl;
+    }
+}
+
 bool Inventory::addItem(Item *item)
 {
     for(int i = 0; i < rows; i++) {
@@ -140,14 +196,10 @@ bool Inventory::addItem(Item *item)
     return false;
 }
 
-
-
-
-
-
-
-
-
+Item* Inventory::getCurrentItem() const
+{
+    return items[currentRow][currentCol];
+}
 
 
 
