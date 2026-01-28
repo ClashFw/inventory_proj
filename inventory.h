@@ -14,6 +14,7 @@ public:
     ~Inventory();
     void display();
     void displayWithItemInfo(Item* item);
+    void displayWithEmptyInfo();
     bool addItem(Item* item);
     Item* getCurrentItem() const;
 

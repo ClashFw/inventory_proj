@@ -62,8 +62,7 @@ void Game::play()
             if(currentItem != nullptr) {
                 player->getInventory()->displayWithItemInfo(currentItem);
             } else {
-                player->getInventory()->display();
-                showItemInfo = false;
+                player->getInventory()->displayWithEmptyInfo();
             }
         } else {
             player->getInventory()->display();
@@ -88,12 +87,7 @@ void Game::play()
                 showItemInfo = false;
                 break;
             case 105: // 'i' key
-                {
-                    Item* currentItem = player->getInventory()->getCurrentItem();
-                    if(currentItem != nullptr) {
-                        showItemInfo = !showItemInfo; // Toggle item info display
-                    }
-                }
+                showItemInfo = !showItemInfo; // Toggle item info display
                 break;
         }
     }
