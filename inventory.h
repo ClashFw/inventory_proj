@@ -9,6 +9,8 @@ private:
     Item*** items;
     int currentRow;
     int currentCol;
+    Rarity currentFilter; // Filter for displaying items by rarity
+    bool filterEnabled;   // Whether filtering is active
 public:
     Inventory();
     ~Inventory();
@@ -16,7 +18,17 @@ public:
     void displayWithItemInfo(Item* item);
     void displayWithEmptyInfo();
     bool addItem(Item* item);
+    bool addItemAtPosition(Item* item, int row, int col);
+    bool addItemAtRandomPosition(Item* item);
     Item* getCurrentItem() const;
+    int getEmptySlotCount() const;
+
+    // Filtering methods
+    void setFilter(Rarity rarity);
+    void clearFilter();
+    bool isFilterEnabled() const;
+    Rarity getCurrentFilter() const;
+    int getFilteredItemCount() const;
 
     //getters & setters
     void clear();
