@@ -120,15 +120,9 @@ Each playthrough will have a unique combination of items at different positions!
 - Item stacking functionality
 - Drag and drop item movement
 - Save/load inventory state
-- Multiple inventory pages
 - Item sorting options
 - Equipment slots
-- Item combination/crafting
 - Legendary rarity tier
-- Item name modifiers (e.g., "Flaming Sword")
 - Adjustable item generation parameters
 - Item categories (weapons, armor, consumables)
 
-## Authors
-
-School project in a duo with da Mini Pekka
