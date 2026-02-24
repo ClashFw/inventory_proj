@@ -78,6 +78,9 @@ Inventory::Inventory()
     currentCol = 0;
     filterEnabled = false;
     currentFilter = common;
+    isDragging = false;
+    dragRow = -1;
+    dragCol = -1;
 
     items = new Item**[rows];
     for(int i = 0; i < rows; i++) {
@@ -145,6 +148,84 @@ int Inventory::getFilteredItemCount() const
     return count;
 }
 
+bool Inventory::startDrag()
+{
+    if(isDragging) return false; // Already dragging
+    if(items[currentRow][currentCol] == nullptr) return false; // Nothing to grab
+    isDragging = true;
+    dragRow = currentRow;
+    dragCol = currentCol;
+    return true;
+}
+
+bool Inventory::dropItem()
+{
+    if(!isDragging) return false;
+    // Swap source and current destination
+    Item* tmp = items[dragRow][dragCol];
+    items[dragRow][dragCol] = items[currentRow][currentCol];
+    items[currentRow][currentCol] = tmp;
+    isDragging = false;
+    dragRow = -1;
+    dragCol = -1;
+    return true;
+}
+
+void Inventory::cancelDrag()
+{
+    isDragging = false;
+    dragRow = -1;
+    dragCol = -1;
+}
+
+bool Inventory::getIsDragging() const
+{
+    return isDragging;
+}
+
+
+// Uses the minimum prefix that uniquely identifies it among all items
+// currently in the inventory (capped at 3 characters).
+// Renders a single inventory cell with drag-state awareness
+void Inventory::renderCell(int i, int j, bool shouldDisplay) const
+{
+    bool isCurrentPos  = (i == currentRow && j == currentCol);
+    bool isDragSource  = (isDragging && i == dragRow && j == dragCol);
+    bool cursorHasDrag = (isCurrentPos && isDragging);
+
+    if(isDragSource)      std::cout << "<";
+    else if(isCurrentPos) std::cout << "<";
+    else                  std::cout << "[";
+
+    if(isDragSource) {
+        std::cout << "   "; // Slot appears empty — item is "in hand"
+    } else if(cursorHasDrag) {
+        std::cout << getItemDisplayStr(dragRow, dragCol); // Dragged item follows cursor
+    } else if(items[i][j] == nullptr) {
+        std::cout << "   ";
+    } else if(shouldDisplay) {
+        std::cout << getItemDisplayStr(i, j);
+    } else {
+        std::cout << "···";
+    }
+
+    if(isDragSource)      std::cout << "> ";
+    else if(isCurrentPos) std::cout << "> ";
+    else                  std::cout << "] ";
+}
+
+std::string Inventory::getItemDisplayStr(int row, int col) const
+{
+    if (items[row][col] == nullptr) return "   ";
+
+    const std::string& name = items[row][col]->getName();
+    std::string result;
+    for (int k = 0; k < 3; k++) {
+        result += (k < (int)name.size()) ? (char)toupper((unsigned char)name[k]) : ' ';
+    }
+    return result;
+}
+
 void Inventory::display()
 {
     // Display filter status
@@ -169,35 +250,17 @@ void Inventory::display()
 
     for(int i = 0; i < rows; i++) {
         for(int j = 0; j < cols; j++) {
-            bool isCurrentPos = (i == currentRow && j == currentCol);
             bool shouldDisplay = true;
-
-            // Check if item should be displayed based on filter
-            if(items[i][j] != nullptr && filterEnabled) {
+            if(items[i][j] != nullptr && filterEnabled)
                 shouldDisplay = (items[i][j]->getRarity() == currentFilter);
-            }
-
-            if(isCurrentPos) {
-                std::cout << "{";
-            } else {
-                std::cout << "[";
-            }
-
-            if(items[i][j] == nullptr) {
-                std::cout << " ";
-            } else if(shouldDisplay) {
-                std::cout << char(toupper(items[i][j]->getName()[0]));
-            } else {
-                std::cout << "·"; // Dimmed dot for filtered out items
-            }
-
-            if(isCurrentPos) {
-                std::cout << "}";
-            } else {
-                std::cout << "]";
-            }
+            renderCell(i, j, shouldDisplay);
         }
         std::cout << std::endl;
+    }
+
+    // Show drag hint
+    if(isDragging) {
+        std::cout << "\n[DRAGGING] Navigate to destination, press G to drop, Q to cancel" << std::endl;
     }
 }
 
@@ -248,41 +311,14 @@ void Inventory::displayWithItemInfo(Item* item)
 
     // Display inventory and item info side by side
     for(int i = 0; i < rows; i++) {
-        // Display inventory row
         for(int j = 0; j < cols; j++) {
-            bool isCurrentPos = (i == currentRow && j == currentCol);
             bool shouldDisplay = true;
-
-            if(items[i][j] != nullptr && filterEnabled) {
+            if(items[i][j] != nullptr && filterEnabled)
                 shouldDisplay = (items[i][j]->getRarity() == currentFilter);
-            }
-
-            if(isCurrentPos) {
-                std::cout << "{";
-            } else {
-                std::cout << "[";
-            }
-
-            if(items[i][j] == nullptr) {
-                std::cout << " ";
-            } else if(shouldDisplay) {
-                std::cout << char(toupper(items[i][j]->getName()[0]));
-            } else {
-                std::cout << "·";
-            }
-
-            if(isCurrentPos) {
-                std::cout << "}";
-            } else {
-                std::cout << "]";
-            }
+            renderCell(i, j, shouldDisplay);
         }
-
-        // Add spacing and item info
         std::cout << "    ";
-        if(i < 9) {
-            std::cout << itemLines[i];
-        }
+        if(i < 9) std::cout << itemLines[i];
         std::cout << std::endl;
     }
 }
@@ -323,41 +359,14 @@ void Inventory::displayWithEmptyInfo()
 
     // Display inventory and empty info side by side
     for(int i = 0; i < rows; i++) {
-        // Display inventory row
         for(int j = 0; j < cols; j++) {
-            bool isCurrentPos = (i == currentRow && j == currentCol);
             bool shouldDisplay = true;
-
-            if(items[i][j] != nullptr && filterEnabled) {
+            if(items[i][j] != nullptr && filterEnabled)
                 shouldDisplay = (items[i][j]->getRarity() == currentFilter);
-            }
-
-            if(isCurrentPos) {
-                std::cout << "{";
-            } else {
-                std::cout << "[";
-            }
-
-            if(items[i][j] == nullptr) {
-                std::cout << " ";
-            } else if(shouldDisplay) {
-                std::cout << char(toupper(items[i][j]->getName()[0]));
-            } else {
-                std::cout << "·";
-            }
-
-            if(isCurrentPos) {
-                std::cout << "}";
-            } else {
-                std::cout << "]";
-            }
+            renderCell(i, j, shouldDisplay);
         }
-
-        // Add spacing and empty info
         std::cout << "    ";
-        if(i < 9) {
-            std::cout << itemLines[i];
-        }
+        if(i < 9) std::cout << itemLines[i];
         std::cout << std::endl;
     }
 }

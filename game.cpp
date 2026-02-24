@@ -46,7 +46,7 @@ void Game::initializeSampleItems()
 void Game::generateRandomInventory()
 {
     // Generate between 5 and 20 random items
-    std::vector<Item*> randomItems = itemGenerator->generateRandomItems(5, 20);
+    std::vector<Item*> randomItems = itemGenerator->generateRandomItems(2, 5);
 
     // Add all generated items to inventory at random positions
     for(Item* item : randomItems) {

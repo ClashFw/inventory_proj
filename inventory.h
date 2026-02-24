@@ -11,6 +11,10 @@ private:
     int currentCol;
     Rarity currentFilter; // Filter for displaying items by rarity
     bool filterEnabled;   // Whether filtering is active
+    bool isDragging;      // Whether an item is being dragged
+    int dragRow;          // Source row of dragged item
+    int dragCol;          // Source col of dragged item
+    void renderCell(int i, int j, bool shouldDisplay) const; // Helper
 public:
     Inventory();
     ~Inventory();
@@ -22,6 +26,13 @@ public:
     bool addItemAtRandomPosition(Item* item);
     Item* getCurrentItem() const;
     int getEmptySlotCount() const;
+    std::string getItemDisplayStr(int row, int col) const;
+
+    // Drag and drop
+    bool startDrag();          // Pick up item at current cursor pos
+    bool dropItem();           // Drop/swap item at current cursor pos
+    void cancelDrag();
+    bool getIsDragging() const;
 
     // Filtering methods
     void setFilter(Rarity rarity);

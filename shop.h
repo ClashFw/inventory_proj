@@ -30,7 +30,10 @@ public:
     // Navigation
     void selectNext();
     void selectPrevious();
+    void selectNextFiltered(const std::vector<int>& results);
+    void selectPreviousFiltered(const std::vector<int>& results);
     int getSelectedIndex() const;
+    void setSelectedIndex(int index);
 
     // Search
     void setSearchQuery(const std::string& query);
