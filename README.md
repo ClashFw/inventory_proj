@@ -1,128 +1,129 @@
 # Terminal-Based Inventory System
 
-A C++ terminal-based inventory management system with grid navigation, item filtering, and random item generation.
+A C++ terminal-based inventory management system with grid navigation, item filtering, a shop, and drag-and-drop item movement.
 
 ## Description
 
-This project is a cross-platform terminal application that simulates an RPG-style inventory system. Players can navigate through a grid-based inventory using keyboard controls, view detailed item information, and filter items by rarity. The system features a powerful random item generator that creates unique inventory setups each time you play, with items placed at random positions throughout the grid.
+This project is a cross-platform terminal application that simulates an RPG-style inventory system. Players can navigate through a grid-based inventory using keyboard controls, view detailed item information, filter items by rarity, and visit a shop to buy and sell items. The system features a random item generator that creates unique inventory setups each session, smart adaptive name display that uses the shortest unambiguous prefix for each item, and drag-and-drop item movement directly within the grid.
 
 ## Features
 
-- **Grid-based Inventory**: 6x7 grid layout for organizing items
+- **Grid-based Inventory**: 6×7 grid layout for organizing items
 - **Keyboard Navigation**: Intuitive WASD controls for cursor movement
-- **Item Information Display**: Toggle detailed item stats with the 'I' key
+- **Drag & Drop Movement**: Pick up any item with `G` and drop it at any slot — items swap if the destination is occupied
+- **Smart Name Display**: Each item shows the shortest prefix that uniquely identifies it among current inventory contents (e.g. `SW` for Sword when Shield is also present, `BOO`/`BOW` for Boots/Bow)
+- **Item Information Panel**: Toggle detailed item stats with `I`
 - **Rarity Filtering**: Filter inventory by Common, Magic, or Rare items
-- **Random Item Generation**: Each game session generates 5-20 random items with randomized properties
-- **Random Positioning**: Items appear at random positions in the grid for natural distribution
-- **Cross-platform Support**: Works on Windows, macOS, and Linux
-- **Dynamic Item Properties**:
-  - Name (randomly selected from 10 item types)
-  - Price (randomized between 5-100 gold)
-  - Durability (always 100)
-  - Level (always 1)
-  - Rarity (randomly assigned: Common 60%, Magic 30%, Rare 10%)
+- **Random Item Generation**: 5–20 random items placed at random positions each session
+- **Shop System**:
+  - Browse 20 randomly generated items
+  - Buy items (deducted from gold) and sell items (50% return)
+  - Search shop items by name with live filtering
+  - Navigation in search mode stays within results only
+  - Restock shop with a fresh inventory at any time
+- **Gold System**: Start with 500g, earn gold by selling, spend it buying
+- **Cross-platform**: Windows, macOS, and Linux supported
 
 ## Controls
 
+### Inventory
+
 | Key | Action |
 |-----|--------|
-| W | Move cursor up |
-| A | Move cursor left |
-| S | Move cursor down |
-| D | Move cursor right |
+| W / A / S / D | Move cursor |
+| G | Grab item — press again on any slot to drop/swap |
+| Q | Cancel current drag |
 | I | Toggle item information panel |
-| 1 | Filter by Common items |
-| 2 | Filter by Magic items |
-| 3 | Filter by Rare items |
-| 0 | Clear filter (show all items) |
-| Backspace | Exit application |
+| 1 | Filter: Common items only |
+| 2 | Filter: Magic items only |
+| 3 | Filter: Rare items only |
+| 0 | Clear filter (show all) |
+| P | Open Shop |
+| Backspace | Exit |
+
+### Shop
+
+| Key | Action |
+|-----|--------|
+| W / S | Navigate items (search-aware when filtering) |
+| B | Buy selected item |
+| V | Open sell menu |
+| F | Search by item name |
+| C | Clear search |
+| R | Restock shop with new items |
+| E | Exit shop |
 
 ## Building the Project
 
 ### Requirements
+
 - CMake 3.16 or higher
 - C++17 compatible compiler
-- Terminal with ANSI escape code support (for best experience)
+- Terminal with ANSI escape code support
 
 ### Build Instructions
 
 ```bash
-# Create build directory
 mkdir build
 cd build
-
-# Generate build files
 cmake ..
-
-# Build the project
 cmake --build .
-
-# Run the application
 ./inventory
 ```
 
-### Platform-Specific Notes
+### Platform Notes
 
-**Windows**: Uses `conio.h` for single character input
-**macOS/Linux**: Uses `termios.h` for terminal manipulation
+**Windows**: Uses `conio.h` for single character input.  
+**macOS / Linux**: Uses `termios.h` for terminal manipulation.
 
 ## Project Structure
 
 ```
 inventory/
 ├── CMakeLists.txt          # Build configuration
-├── main.cpp                # Application entry point
-├── game.h/cpp              # Game loop and controls
-├── player.h/cpp            # Player class
-├── inventory.h/cpp         # Inventory management and filtering
-├── item.h/cpp              # Item class with properties
-├── itemGenerator.h/cpp     # Random item generation system
-├── singleCharacter.h       # Cross-platform keyboard input
-└── README.md               # This file
+├── main.cpp                # Entry point, seeds RNG
+├── game.h / game.cpp       # Main game loop, input handling
+├── player.h / player.cpp   # Player class
+├── inventory.h / inventory.cpp  # Grid, display, filtering, drag & drop
+├── item.h / item.cpp       # Item properties and rarity
+├── ItemGenerator.h / .cpp  # Random item factory
+├── shop.h / shop.cpp       # Shop, buy/sell, search, navigation
+├── singleCharacter.h       # Cross-platform raw keyboard input
+├── inventory_uml.drawio    # UML class diagram (draw.io)
+└── README.md
 ```
 
 ## Class Overview
 
-- **Game**: Manages the main game loop, user input, and screen updates
-- **Player**: Represents the player and owns an inventory
-- **Inventory**: Handles item storage, display, filtering logic, and random positioning
-- **Item**: Represents individual items with properties and rarity
-- **ItemGenerator**: Creates random items with randomized properties and positions
+| Class | Responsibility |
+|-------|---------------|
+| `Game` | Main loop, screen refresh, user input dispatch |
+| `Player` | Owns the player's `Inventory` |
+| `Inventory` | 6×7 grid storage, display with drag state, rarity filtering, smart name prefixes |
+| `Item` | Properties: name, rarity, price, durability, level |
+| `ItemGenerator` | Factory: creates random `Item` instances with randomised properties |
+| `Shop` | Items for sale; buy/sell, gold management, name search, search-aware navigation |
 
 ## Item Generation
 
-The system uses a random item generator that creates 5-20 items each game session.
+Items are generated at startup (5–20) and placed at random grid positions.
 
-**Available Item Types:**
-- Sword
-- Shield
-- Potion
-- Helmet
-- Boots
-- Ring
-- Amulet
-- Bow
-- Arrow
-- Armor
+**Available types**: Sword · Shield · Potion · Helmet · Boots · Ring · Amulet · Bow · Arrow · Armor
 
-**Randomization Details:**
-- **Name**: Randomly selected from the 10 item types above
-- **Price**: Random value between 5-100 gold
-- **Rarity**: Common (60% chance), Magic (30% chance), or Rare (10% chance)
-- **Durability**: Always 100
-- **Level**: Always 1
-- **Position**: Placed at random empty slots in the grid
+**Randomisation**: Name (uniform), Price (5–100g), Rarity (Common 60% · Magic 30% · Rare 10%), Durability always 100, Level always 1.
 
-Each playthrough will have a unique combination of items at different positions!
+## Smart Name Display
 
-## Future Enhancements
+Instead of a single initial, the grid shows the minimum prefix needed to tell items apart:
 
-- Item stacking functionality
-- Drag and drop item movement
-- Save/load inventory state
-- Item sorting options
-- Equipment slots
-- Legendary rarity tier
-- Adjustable item generation parameters
-- Item categories (weapons, armor, consumables)
+| Items present | Displayed as |
+|---------------|-------------|
+| Sword only | `S  ` |
+| Sword + Shield | `SW ` / `SH ` |
+| Bow + Boots | `BOW` / `BOO` |
+| Arrow + Armor + Amulet | `ARR` / `ARM` / `AMU` |
+
+## Drag & Drop
+
+Press `G` on any occupied slot to pick it up — the source slot shows `< >` and the item follows your cursor as `{XXX}`. Navigate to any destination and press `G` again to place it. If the destination already holds an item the two are swapped. Press `Q` to cancel and return the item to its original slot.
 
