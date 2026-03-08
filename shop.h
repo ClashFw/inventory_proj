@@ -25,7 +25,9 @@ public:
     void displayShop();
     void displayShopWithSearch();
     bool buyItem(int index, Inventory* playerInventory);
+    Item* buyItemNoPlace(int index); // Returns item without placing it, deducts gold
     bool sellItem(Item* item);
+    bool sellItemForPrice(Item* item, int price);
 
     // Navigation
     void selectNext();

@@ -7,7 +7,7 @@
 int main() {
     srand(time(NULL)); // Initialize random seed once
     Game game;
-    game.play();
+    game.showMainMenu();
 
     return 0;
 }

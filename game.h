@@ -13,9 +13,13 @@ private:
 public:
     Game();
     ~Game();
+    void showMainMenu();
     void play();
     void playShop();
+    void playSearchMenu();
     void sellItemsMenu();
+    void placeItemMenu(Item* item);
+    void showSellConfirmScreen(Item* item, int row, int col);
     void initializeSampleItems();
     void generateRandomInventory();
     Player *getPlayer() const;

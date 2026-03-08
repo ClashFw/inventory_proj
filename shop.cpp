@@ -6,7 +6,15 @@
 Shop::Shop()
 {
     itemGenerator = new ItemGenerator();
-    playerGold = 100 + (rand() % 901); // Random gold between 100 and 1000
+    // Gold: mostly 200-400, small chance up to 500, very rare above 500
+    int roll = rand() % 100;
+    if(roll < 70) {
+        playerGold = 200 + (rand() % 201);  // 70%: 200-400
+    } else if(roll < 90) {
+        playerGold = 400 + (rand() % 101);  // 20%: 400-500
+    } else {
+        playerGold = 500 + (rand() % 301);  // 10%: 500-800
+    }
     selectedIndex = 0;
     searchQuery = "";
     generateShopInventory(20); // Generate 20 items for shop
@@ -190,51 +198,41 @@ void Shop::displayShopWithSearch()
 
 bool Shop::buyItem(int index, Inventory* playerInventory)
 {
-    if(index < 0 || index >= (int)shopInventory.size()) {
-        return false;
-    }
-
+    if(index < 0 || index >= (int)shopInventory.size()) return false;
     Item* item = shopInventory[index];
-
-    // Check if player has enough gold
-    if(playerGold < item->getPrice()) {
-        return false;
-    }
-
-    // Try to add to player inventory
-    if(!playerInventory->addItemAtRandomPosition(item)) {
-        return false; // Inventory full
-    }
-
-    // Deduct gold
+    if(playerGold < item->getPrice()) return false;
+    if(!playerInventory->addItemAtRandomPosition(item)) return false;
     playerGold -= item->getPrice();
-
-    // Remove from shop (but don't delete, it's now in player inventory)
     shopInventory.erase(shopInventory.begin() + index);
-
-    // Adjust selected index if needed
-    if(selectedIndex >= (int)shopInventory.size() && selectedIndex > 0) {
-        selectedIndex--;
-    }
-
+    if(selectedIndex >= (int)shopInventory.size() && selectedIndex > 0) selectedIndex--;
     return true;
+}
+
+Item* Shop::buyItemNoPlace(int index)
+{
+    if(index < 0 || index >= (int)shopInventory.size()) return nullptr;
+    Item* item = shopInventory[index];
+    if(playerGold < item->getPrice()) return nullptr;
+    playerGold -= item->getPrice();
+    shopInventory.erase(shopInventory.begin() + index);
+    if(selectedIndex >= (int)shopInventory.size() && selectedIndex > 0) selectedIndex--;
+    return item;
 }
 
 bool Shop::sellItem(Item* item)
 {
-    if(item == nullptr) {
-        return false;
-    }
-
-    // Calculate sell price (50% of original price)
+    if(item == nullptr) return false;
     int sellPrice = item->getPrice() / 2;
-
-    // Add gold to player
     playerGold += sellPrice;
-
-    // Add item to shop inventory
     shopInventory.push_back(item);
+    return true;
+}
 
+bool Shop::sellItemForPrice(Item* item, int price)
+{
+    if(item == nullptr) return false;
+    playerGold += price;
+    shopInventory.push_back(item);
     return true;
 }
 

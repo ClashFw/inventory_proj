@@ -3,77 +3,26 @@
 #include <vector>
 #include <utility>
 #include <cstdlib>
+#include <cctype>
 
-int Inventory::getRows() const
-{
-    return rows;
-}
+// ─── Layout (3 rows x 8 cols) ────────────────────────────────
+//
+//  col:  0   1   2   3   4   5   6   7
+// row 0: BAG BAG BAG  .   .  TOP  .   .
+// row 1: BAG BAG BAG  .  LFT MID RGT  .
+// row 2: BAG BAG BAG  .   .  BOT  .   .
+//
+// col 3 = gap
+// ─────────────────────────────────────────────────────────────
 
-void Inventory::setRows(int newRows)
-{
-    rows = newRows;
-}
-
-int Inventory::getCols() const
-{
-    return cols;
-}
-
-void Inventory::setCols(int newCols)
-{
-    cols = newCols;
-}
-
-Item ***Inventory::getItems() const
-{
-    return items;
-}
-
-void Inventory::setItems(Item ***newItems)
-{
-    items = newItems;
-}
-
-int Inventory::getCurrentRow() const
-{
-    return currentRow;
-}
-
-void Inventory::setCurrentRow(int newCurrentRow)
-{
-    if(newCurrentRow >= 0 && newCurrentRow < rows) {
-        currentRow = newCurrentRow;
-    }
-    else if(newCurrentRow < 0) {
-        currentRow = rows - 1;
-    }
-    else {
-        currentRow = 0;
-    }
-}
-
-int Inventory::getCurrentCol() const
-{
-    return currentCol;
-}
-
-void Inventory::setCurrentCol(int newCurrentCol)
-{
-    if(newCurrentCol >= 0 && newCurrentCol < cols) {
-        currentCol = newCurrentCol;
-    }
-    else if(newCurrentCol < 0) {
-        currentCol = cols - 1;
-    }
-    else {
-        currentCol = 0;
-    }
-}
+static const bool ACTIVE_MAP[3][8] = {
+    { true,  true,  true,  false, false, true,  false, false },
+    { true,  true,  true,  false, true,  true,  true,  false },
+    { true,  true,  true,  false, false, true,  false, false },
+};
 
 Inventory::Inventory()
 {
-    rows = 6;
-    cols = 7;
     currentRow = 0;
     currentCol = 0;
     filterEnabled = false;
@@ -82,362 +31,239 @@ Inventory::Inventory()
     dragRow = -1;
     dragCol = -1;
 
-    items = new Item**[rows];
-    for(int i = 0; i < rows; i++) {
-        items[i] = new Item*[cols];
-        for(int j = 0; j < cols; j++) {
-            items[i][j] = nullptr;
+    for(int i = 0; i < ROWS; i++)
+        for(int j = 0; j < COLS; j++) {
+            items[i][j]       = nullptr;
+            activeSlots[i][j] = ACTIVE_MAP[i][j];
         }
-    }
 }
 
-Inventory::~Inventory()
-{
-    clear();
-    for(int i = 0; i < rows; i++) {
-        delete[] items[i];
-    }
-    delete[] items;
-}
+Inventory::~Inventory() { clear(); }
 
 void Inventory::clear()
 {
-    for(int i = 0; i < rows; i++) {
-        for(int j = 0; j < cols; j++) {
-            if(items[i][j] != nullptr) {
-                delete items[i][j];
-                items[i][j] = nullptr;
-            }
-        }
+    for(int i = 0; i < ROWS; i++)
+        for(int j = 0; j < COLS; j++)
+            if(items[i][j]) { delete items[i][j]; items[i][j] = nullptr; }
+}
+
+bool Inventory::isActive(int r, int c) const
+{
+    if(r < 0 || r >= ROWS || c < 0 || c >= COLS) return false;
+    return activeSlots[r][c];
+}
+
+Item* Inventory::getItemAt(int r, int c) const
+{
+    if(r < 0 || r >= ROWS || c < 0 || c >= COLS) return nullptr;
+    return items[r][c];
+}
+
+void Inventory::setItemAt(int r, int c, Item* item)
+{
+    if(r < 0 || r >= ROWS || c < 0 || c >= COLS) return;
+    items[r][c] = item;
+}
+
+Item* Inventory::getCurrentItem() const { return items[currentRow][currentCol]; }
+Item*** Inventory::getItems()     const { return nullptr; }
+Item*** Inventory::getItemsGrid() const { return nullptr; }
+
+// ── cursor navigation ────────────────────────────────────────
+void Inventory::moveToNextActive(int dRow, int dCol)
+{
+    int r = currentRow, c = currentCol;
+    for(int attempt = 0; attempt < ROWS * COLS; attempt++) {
+        c += dCol; r += dRow;
+        if(c < 0) c = COLS-1;
+        if(c >= COLS) c = 0;
+        if(r < 0) r = ROWS-1;
+        if(r >= ROWS) r = 0;
+        if(activeSlots[r][c]) { currentRow = r; currentCol = c; return; }
     }
 }
 
-void Inventory::setFilter(Rarity rarity)
+void Inventory::setCurrentRow(int r) { if(r != currentRow) moveToNextActive((r < currentRow) ? -1 : 1, 0); }
+void Inventory::setCurrentCol(int c) { if(c != currentCol) moveToNextActive(0, (c < currentCol) ? -1 : 1); }
+
+// ── display helpers ──────────────────────────────────────────
+std::string Inventory::getItemDisplayStr(int row, int col) const
 {
-    filterEnabled = true;
-    currentFilter = rarity;
+    if(!items[row][col]) return "   ";
+    const std::string& name = items[row][col]->getName();
+    std::string r;
+    for(int k = 0; k < 3; k++)
+        r += (k < (int)name.size()) ? (char)toupper((unsigned char)name[k]) : ' ';
+    return r;
 }
 
-void Inventory::clearFilter()
+void Inventory::renderCell(int i, int j, bool shouldDisplay) const
 {
-    filterEnabled = false;
+    if(!activeSlots[i][j]) { std::cout << "      "; return; }
+
+    bool isCursor  = (i == currentRow && j == currentCol);
+    bool isDragSrc = (isDragging && i == dragRow   && j == dragCol);
+    bool carrying  = (isCursor && isDragging);
+
+    std::cout << (isCursor ? "<" : "[");
+
+    if     (isDragSrc && !carrying)  std::cout << "   ";
+    else if(carrying)                std::cout << getItemDisplayStr(dragRow, dragCol);
+    else if(!items[i][j])            std::cout << "   ";
+    else if(shouldDisplay)           std::cout << getItemDisplayStr(i, j);
+    else                             std::cout << "···";
+
+    std::cout << (isCursor ? "> " : "] ");
 }
 
-bool Inventory::isFilterEnabled() const
+// ── display ──────────────────────────────────────────────────
+void Inventory::display()
 {
-    return filterEnabled;
-}
-
-Rarity Inventory::getCurrentFilter() const
-{
-    return currentFilter;
-}
-
-int Inventory::getFilteredItemCount() const
-{
-    int count = 0;
-    for(int i = 0; i < rows; i++) {
-        for(int j = 0; j < cols; j++) {
-            if(items[i][j] != nullptr) {
-                if(!filterEnabled || items[i][j]->getRarity() == currentFilter) {
-                    count++;
-                }
-            }
+    std::cout << std::endl;
+    for(int i = 0; i < ROWS; i++) {
+        for(int j = 0; j < COLS; j++) {
+            if(j == 3) { std::cout << "   "; continue; } // gap
+            bool sd = true;
+            if(activeSlots[i][j] && items[i][j] && filterEnabled)
+                sd = (items[i][j]->getRarity() == currentFilter);
+            renderCell(i, j, sd);
         }
+        std::cout << std::endl;
     }
-    return count;
+    std::cout << std::endl;
 }
 
+void Inventory::displayWithItemInfo(Item* item)
+{
+    auto rs = [](Rarity r) -> std::string {
+        switch(r){ case common: return "Common"; case magic: return "Magic"; case rare: return "Rare"; }
+        return "";
+    };
+
+    std::string lines[5] = {
+        "Name:   " + item->getName(),
+        "Price:  " + std::to_string(item->getPrice()) + "g",
+        "Dur:    " + std::to_string(item->getDurability()),
+        "Level:  " + std::to_string(item->getLevel()),
+        "Rarity: " + rs(item->getRarity()),
+    };
+
+    std::cout << std::endl;
+    for(int i = 0; i < ROWS; i++) {
+        for(int j = 0; j < COLS; j++) {
+            if(j == 3) { std::cout << "   "; continue; }
+            bool sd = true;
+            if(activeSlots[i][j] && items[i][j] && filterEnabled)
+                sd = (items[i][j]->getRarity() == currentFilter);
+            renderCell(i, j, sd);
+        }
+        std::cout << "   ";
+        if(i < 5) std::cout << lines[i];
+        std::cout << std::endl;
+    }
+    std::cout << std::endl;
+}
+
+void Inventory::displayWithEmptyInfo()
+{
+    std::cout << std::endl;
+    for(int i = 0; i < ROWS; i++) {
+        for(int j = 0; j < COLS; j++) {
+            if(j == 3) { std::cout << "   "; continue; }
+            bool sd = true;
+            if(activeSlots[i][j] && items[i][j] && filterEnabled)
+                sd = (items[i][j]->getRarity() == currentFilter);
+            renderCell(i, j, sd);
+        }
+        std::cout << std::endl;
+    }
+    std::cout << std::endl;
+}
+
+// ── item adding ──────────────────────────────────────────────
+bool Inventory::addItem(Item* item)
+{
+    for(int i = 0; i < ROWS; i++)
+        for(int j = 0; j < 3; j++) // bag cols only (0-2)
+            if(activeSlots[i][j] && !items[i][j]) { items[i][j] = item; return true; }
+    return false;
+}
+
+bool Inventory::addItemAtPosition(Item* item, int row, int col)
+{
+    if(!isActive(row,col) || items[row][col]) return false;
+    items[row][col] = item; return true;
+}
+
+bool Inventory::addItemAtRandomPosition(Item* item)
+{
+    std::vector<std::pair<int,int>> empty;
+    for(int i = 0; i < ROWS; i++)
+        for(int j = 0; j < 3; j++) // bag cols only (0-2)
+            if(activeSlots[i][j] && !items[i][j])
+                empty.push_back({i,j});
+    if(empty.empty()) return false;
+    auto [r,c] = empty[rand() % empty.size()];
+    items[r][c] = item; return true;
+}
+
+int Inventory::getEmptySlotCount() const
+{
+    int n = 0;
+    for(int i = 0; i < ROWS; i++)
+        for(int j = 0; j < COLS; j++)
+            if(activeSlots[i][j] && !items[i][j]) n++;
+    return n;
+}
+
+bool Inventory::equipItem()
+{
+    Item* item = items[currentRow][currentCol];
+    if(!item) return false;
+
+    // Find a random empty equipment slot (cols 4-7)
+    std::vector<std::pair<int,int>> empty;
+    for(int i = 0; i < ROWS; i++)
+        for(int j = 4; j < COLS; j++)
+            if(activeSlots[i][j] && !items[i][j])
+                empty.push_back({i,j});
+    if(empty.empty()) return false;
+
+    auto [r,c] = empty[rand() % empty.size()];
+    items[r][c] = item;
+    items[currentRow][currentCol] = nullptr;
+    return true;
+}
+
+// ── drag & drop ──────────────────────────────────────────────
 bool Inventory::startDrag()
 {
-    if(isDragging) return false; // Already dragging
-    if(items[currentRow][currentCol] == nullptr) return false; // Nothing to grab
-    isDragging = true;
-    dragRow = currentRow;
-    dragCol = currentCol;
-    return true;
+    if(isDragging || !items[currentRow][currentCol]) return false;
+    isDragging = true; dragRow = currentRow; dragCol = currentCol; return true;
 }
 
 bool Inventory::dropItem()
 {
     if(!isDragging) return false;
-    // Swap source and current destination
-    Item* tmp = items[dragRow][dragCol];
-    items[dragRow][dragCol] = items[currentRow][currentCol];
-    items[currentRow][currentCol] = tmp;
-    isDragging = false;
-    dragRow = -1;
-    dragCol = -1;
-    return true;
+    std::swap(items[dragRow][dragCol], items[currentRow][currentCol]);
+    isDragging = false; dragRow = dragCol = -1; return true;
 }
 
-void Inventory::cancelDrag()
+void Inventory::cancelDrag() { isDragging = false; dragRow = dragCol = -1; }
+bool Inventory::getIsDragging() const { return isDragging; }
+
+// ── filtering ─────────────────────────────────────────────────
+void Inventory::setFilter(Rarity r) { filterEnabled = true; currentFilter = r; }
+void Inventory::clearFilter()       { filterEnabled = false; }
+bool Inventory::isFilterEnabled()   const { return filterEnabled; }
+Rarity Inventory::getCurrentFilter() const { return currentFilter; }
+
+int Inventory::getFilteredItemCount() const
 {
-    isDragging = false;
-    dragRow = -1;
-    dragCol = -1;
-}
-
-bool Inventory::getIsDragging() const
-{
-    return isDragging;
-}
-
-
-// Uses the minimum prefix that uniquely identifies it among all items
-// currently in the inventory (capped at 3 characters).
-// Renders a single inventory cell with drag-state awareness
-void Inventory::renderCell(int i, int j, bool shouldDisplay) const
-{
-    bool isCurrentPos  = (i == currentRow && j == currentCol);
-    bool isDragSource  = (isDragging && i == dragRow && j == dragCol);
-    bool cursorHasDrag = (isCurrentPos && isDragging);
-
-    if(isDragSource)      std::cout << "<";
-    else if(isCurrentPos) std::cout << "<";
-    else                  std::cout << "[";
-
-    if(isDragSource) {
-        std::cout << "   "; // Slot appears empty — item is "in hand"
-    } else if(cursorHasDrag) {
-        std::cout << getItemDisplayStr(dragRow, dragCol); // Dragged item follows cursor
-    } else if(items[i][j] == nullptr) {
-        std::cout << "   ";
-    } else if(shouldDisplay) {
-        std::cout << getItemDisplayStr(i, j);
-    } else {
-        std::cout << "···";
-    }
-
-    if(isDragSource)      std::cout << "> ";
-    else if(isCurrentPos) std::cout << "> ";
-    else                  std::cout << "] ";
-}
-
-std::string Inventory::getItemDisplayStr(int row, int col) const
-{
-    if (items[row][col] == nullptr) return "   ";
-
-    const std::string& name = items[row][col]->getName();
-    std::string result;
-    for (int k = 0; k < 3; k++) {
-        result += (k < (int)name.size()) ? (char)toupper((unsigned char)name[k]) : ' ';
-    }
-    return result;
-}
-
-void Inventory::display()
-{
-    // Display filter status
-    if(filterEnabled) {
-        std::cout << "Filter: ";
-        switch(currentFilter) {
-            case common:
-                std::cout << "Common";
-                break;
-            case magic:
-                std::cout << "Magic";
-                break;
-            case rare:
-                std::cout << "Rare";
-                break;
-        }
-        std::cout << " (" << getFilteredItemCount() << " items)" << std::endl;
-    } else {
-        std::cout << "Filter: None (All items)" << std::endl;
-    }
-    std::cout << std::endl;
-
-    for(int i = 0; i < rows; i++) {
-        for(int j = 0; j < cols; j++) {
-            bool shouldDisplay = true;
-            if(items[i][j] != nullptr && filterEnabled)
-                shouldDisplay = (items[i][j]->getRarity() == currentFilter);
-            renderCell(i, j, shouldDisplay);
-        }
-        std::cout << std::endl;
-    }
-
-    // Show drag hint
-    if(isDragging) {
-        std::cout << "\n[DRAGGING] Navigate to destination, press G to drop, Q to cancel" << std::endl;
-    }
-}
-
-void Inventory::displayWithItemInfo(Item* item)
-{
-    // Get item info lines
-    std::string itemLines[9];
-    itemLines[0] = "=== Item Information ===";
-    itemLines[1] = "Name: " + item->getName();
-    itemLines[2] = "Price: " + std::to_string(item->getPrice());
-    itemLines[3] = "Durability: " + std::to_string(item->getDurability());
-    itemLines[4] = "Level: " + std::to_string(item->getLevel());
-    itemLines[5] = "Rarity: ";
-    switch(item->getRarity()) {
-        case common:
-            itemLines[5] += "Common";
-            break;
-        case magic:
-            itemLines[5] += "Magic";
-            break;
-        case rare:
-            itemLines[5] += "Rare";
-            break;
-    }
-    itemLines[6] = "========================";
-    itemLines[7] = "";
-    itemLines[8] = "Press 'I' to close";
-
-    // Display filter status
-    if(filterEnabled) {
-        std::cout << "Filter: ";
-        switch(currentFilter) {
-            case common:
-                std::cout << "Common";
-                break;
-            case magic:
-                std::cout << "Magic";
-                break;
-            case rare:
-                std::cout << "Rare";
-                break;
-        }
-        std::cout << " (" << getFilteredItemCount() << " items)" << std::endl;
-    } else {
-        std::cout << "Filter: None (All items)" << std::endl;
-    }
-    std::cout << std::endl;
-
-    // Display inventory and item info side by side
-    for(int i = 0; i < rows; i++) {
-        for(int j = 0; j < cols; j++) {
-            bool shouldDisplay = true;
-            if(items[i][j] != nullptr && filterEnabled)
-                shouldDisplay = (items[i][j]->getRarity() == currentFilter);
-            renderCell(i, j, shouldDisplay);
-        }
-        std::cout << "    ";
-        if(i < 9) std::cout << itemLines[i];
-        std::cout << std::endl;
-    }
-}
-
-void Inventory::displayWithEmptyInfo()
-{
-    // Get empty info lines
-    std::string itemLines[9];
-    itemLines[0] = "=== Item Information ===";
-    itemLines[1] = "";
-    itemLines[2] = "   No item selected";
-    itemLines[3] = "";
-    itemLines[4] = "";
-    itemLines[5] = "";
-    itemLines[6] = "========================";
-    itemLines[7] = "";
-    itemLines[8] = "Press 'I' to close";
-
-    // Display filter status
-    if(filterEnabled) {
-        std::cout << "Filter: ";
-        switch(currentFilter) {
-            case common:
-                std::cout << "Common";
-                break;
-            case magic:
-                std::cout << "Magic";
-                break;
-            case rare:
-                std::cout << "Rare";
-                break;
-        }
-        std::cout << " (" << getFilteredItemCount() << " items)" << std::endl;
-    } else {
-        std::cout << "Filter: None (All items)" << std::endl;
-    }
-    std::cout << std::endl;
-
-    // Display inventory and empty info side by side
-    for(int i = 0; i < rows; i++) {
-        for(int j = 0; j < cols; j++) {
-            bool shouldDisplay = true;
-            if(items[i][j] != nullptr && filterEnabled)
-                shouldDisplay = (items[i][j]->getRarity() == currentFilter);
-            renderCell(i, j, shouldDisplay);
-        }
-        std::cout << "    ";
-        if(i < 9) std::cout << itemLines[i];
-        std::cout << std::endl;
-    }
-}
-
-bool Inventory::addItem(Item *item)
-{
-    for(int i = 0; i < rows; i++) {
-        for(int j = 0; j < cols; j++) {
-            if(items[i][j] == nullptr) {
-                items[i][j] = item;
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-Item* Inventory::getCurrentItem() const
-{
-    return items[currentRow][currentCol];
-}
-
-bool Inventory::addItemAtPosition(Item* item, int row, int col)
-{
-    if(row < 0 || row >= rows || col < 0 || col >= cols) {
-        return false; // Invalid position
-    }
-
-    if(items[row][col] != nullptr) {
-        return false; // Position already occupied
-    }
-
-    items[row][col] = item;
-    return true;
-}
-
-bool Inventory::addItemAtRandomPosition(Item* item)
-{
-    // Get list of empty positions
-    std::vector<std::pair<int, int>> emptyPositions;
-
-    for(int i = 0; i < rows; i++) {
-        for(int j = 0; j < cols; j++) {
-            if(items[i][j] == nullptr) {
-                emptyPositions.push_back(std::make_pair(i, j));
-            }
-        }
-    }
-
-    if(emptyPositions.empty()) {
-        return false; // No empty slots
-    }
-
-    // Pick random empty position
-    int randomIndex = rand() % emptyPositions.size();
-    int row = emptyPositions[randomIndex].first;
-    int col = emptyPositions[randomIndex].second;
-
-    items[row][col] = item;
-    return true;
-}
-
-int Inventory::getEmptySlotCount() const
-{
-    int count = 0;
-    for(int i = 0; i < rows; i++) {
-        for(int j = 0; j < cols; j++) {
-            if(items[i][j] == nullptr) {
-                count++;
-            }
-        }
-    }
-    return count;
+    int n = 0;
+    for(int i = 0; i < ROWS; i++)
+        for(int j = 0; j < COLS; j++)
+            if(activeSlots[i][j] && items[i][j])
+                if(!filterEnabled || items[i][j]->getRarity() == currentFilter) n++;
+    return n;
 }
