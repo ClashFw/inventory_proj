@@ -252,41 +252,31 @@ void Game::showSellConfirmScreen(Item* item, int row, int col)
     while(true) {
         printf("\033[2J"); printf("\033[H"); fflush(stdout);
 
-        std::cout << "╔══════════════════════════════════╗" << std::endl;
-        std::cout << "║         SELL ITEM?               ║" << std::endl;
-        std::cout << "╠══════════════════════════════════╣" << std::endl;
-        std::cout << "║                                  ║" << std::endl;
-        std::cout << "║  Item:   " << item->getName();
+        std::cout << "╔═════════════════════════════════════════════════╗" << std::endl;
+        std::cout << "║                   SELL ITEM?                    ║" << std::endl;
+        std::cout << "╠═════════════════════════════════════════════════╣" << std::endl;
+        std::cout << "║                                                 ║" << std::endl;
+        std::cout << "║  Item:   " << item->getName() << "               ";
         int namePad = 24 - (int)item->getName().size();
         for(int i = 0; i < namePad; i++) std::cout << " ";
         std::cout << "║" << std::endl;
 
-        std::cout << "║  Worth:  " << item->getPrice() << "g (full price)";
+        std::cout << "║  Worth:  " << item->getPrice() << "g (full price)           ";
         int wp = 14 - (int)std::to_string(item->getPrice()).size();
         for(int i = 0; i < wp; i++) std::cout << " ";
         std::cout << "║" << std::endl;
 
-        std::cout << "║  Sell:   " << sellPrice << "g (" << pct << "%)";
+        std::cout << "║  Sell:   " << sellPrice << "g (" << pct << "%)                  ";
         int sp = 16 - (int)std::to_string(sellPrice).size() - (int)std::to_string(pct).size();
         for(int i = 0; i < sp; i++) std::cout << " ";
         std::cout << "║" << std::endl;
 
-        std::cout << "║                                  ║" << std::endl;
-        std::cout << "║  Rarity: ";
-        int rLen = 0;
-        switch(item->getRarity()) {
-            case common: std::cout << "Common"; rLen = 6; break;
-            case magic:  std::cout << "Magic";  rLen = 5; break;
-            case rare:   std::cout << "Rare";   rLen = 4; break;
-        }
-        for(int i = 0; i < 24 - rLen; i++) std::cout << " ";
-        std::cout << "║" << std::endl;
 
-        std::cout << "║                                  ║" << std::endl;
-        std::cout << "╠══════════════════════════════════╣" << std::endl;
-        std::cout << "║  Y - Confirm sell                ║" << std::endl;
-        std::cout << "║  N - Cancel                      ║" << std::endl;
-        std::cout << "╚══════════════════════════════════╝" << std::endl;
+        std::cout << "║                                                 ║" << std::endl;
+        std::cout << "╠═════════════════════════════════════════════════╣" << std::endl;
+        std::cout << "║  Y - Confirm sell                               ║" << std::endl;
+        std::cout << "║  N - Cancel                                     ║" << std::endl;
+        std::cout << "╚═════════════════════════════════════════════════╝" << std::endl;
 
         int key = (int)getSingleChar();
         if(key == 121 || key == 89) { // Y or y
