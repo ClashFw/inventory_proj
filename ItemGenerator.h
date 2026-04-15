@@ -1,38 +1,82 @@
-#ifndef ITEMGENERATOR_H
-#define ITEMGENERATOR_H
+#ifndef INVENTORY_H
+#define INVENTORY_H
 
 #include "item.h"
 #include <string>
-#include <vector>
 
-class ItemGenerator
-{
+class Inventory {
 private:
-    std::vector<std::string> itemNames;
-    int minPrice;
-    int maxPrice;
+    static const int ROWS = 3;
+    static const int COLS = 8;
+    Item* items[ROWS][COLS];
+    bool activeSlots[ROWS][COLS];
+
+    int currentRow;
+    int currentCol;
+
+    Rarity currentFilter;
+    bool filterEnabled;
+
+    ItemType currentTypeFilter;
+    bool typeFilterEnabled;
+
+    bool isDragging;
+    int dragRow;
+    int dragCol;
+
+    void renderCell(int i, int j, bool shouldDisplay) const;
+    void moveToNextActive(int dRow, int dCol);
 
 public:
-    ItemGenerator();
+    Inventory();
+    ~Inventory();
 
-    // Generate a single random item with random properties
-    Item* generateRandomItem();
+    void display();
+    void displayWithItemInfo(Item* item);
+    void displayWithEmptyInfo();
 
-    // Generate multiple random items (between min and max count)
-    std::vector<Item*> generateRandomItems(int minCount, int maxCount);
+    bool addItem(Item* item);
+    bool addItemAtPosition(Item* item, int row, int col);
+    bool addItemAtRandomPosition(Item* item);
+    Item* getCurrentItem() const;
+    int getEmptySlotCount() const;
+    std::string getItemDisplayStr(int row, int col) const;
 
-    // Get random item name from the list
-    std::string getRandomItemName();
+    bool isActive(int row, int col) const;
 
-    // Get random price within range
-    int getRandomPrice();
+    bool equipItem();
+    bool startDrag();
+    bool dropItem();
+    void cancelDrag();
+    bool getIsDragging() const;
 
-    // Get random rarity
-    Rarity getRandomRarity();
+    void setFilter(Rarity rarity);
+    void clearFilter();
+    bool isFilterEnabled() const;
+    Rarity getCurrentFilter() const;
 
-    // Setters
-    void setMinPrice(int price);
-    void setMaxPrice(int price);
+    void setTypeFilter(ItemType type);
+    void clearTypeFilter();
+    bool isTypeFilterEnabled() const;
+    ItemType getCurrentTypeFilter() const;
+
+    void clearAllFilters();
+
+    int getFilteredItemCount() const;
+
+    void clear();
+    int getRows() const { return ROWS; }
+    int getCols() const { return COLS; }
+    Item*** getItems() const;
+    int getCurrentRow() const { return currentRow; }
+    int getCurrentCol() const { return currentCol; }
+    void setCurrentRow(int r);
+    void setCurrentCol(int c);
+
+    Item* getItemAt(int r, int c) const;
+    void setItemAt(int r, int c, Item* item);
+
+    Item*** getItemsGrid() const;
 };
 
-#endif // ITEMGENERATOR_H
+#endif // INVENTORY_H
