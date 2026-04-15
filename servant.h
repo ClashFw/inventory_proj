@@ -55,15 +55,15 @@ public:
     bool isAlive() const { return currentHP > 0; }
 
     const std::vector<NoblePhantasm>& getNPs() const { return noblePhantasms; }
-    bool isNPAvailable(size_t idx) const;
+    bool isNPAvailable(std::size_t idx) const;
     void resetForNewBattle();
 
     // Damage helpers; defenderDurEff is the defender's effective durability
     int basicAttackDamage(int attackerStrBonus, int defenderDurEff) const;
-    int noblePhantasmDamage(size_t idx,
+    int noblePhantasmDamage(std::size_t idx,
                             int attackerStrBonus,
                             int defenderDurEff) const;
-    void markNPUsed(size_t idx);
+    void markNPUsed(std::size_t idx);
 
     void renderAscii() const;
 
