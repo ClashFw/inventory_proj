@@ -5,8 +5,8 @@
 #include <string>
 
 // Layout uses a fixed 2x5 grid.
-// Bag side:   cols 0–2 (2x3 = 6 slots)
-// Equip side: cols 3–4 (2x2 = 4 slots)
+// Bag side:   cols 0-2 (2x3 = 6 slots)
+// Equip side: cols 3-4 (2x2 = 4 slots)
 //
 // row 0: [BAG][BAG][BAG][EQUIP][EQUIP]
 // row 1: [BAG][BAG][BAG][EQUIP][EQUIP]
@@ -14,12 +14,9 @@
 class Inventory
 {
 private:
-    // Grid storage: 2 rows x 5 cols
     static const int ROWS = 2;
     static const int COLS = 5;
     Item* items[ROWS][COLS];
-
-    // Which cells are valid slots
     bool activeSlots[ROWS][COLS];
 
     int currentRow;
@@ -27,12 +24,16 @@ private:
 
     Rarity currentFilter;
     bool filterEnabled;
+
+    ItemType currentTypeFilter;
+    bool typeFilterEnabled;
+
     bool isDragging;
     int dragRow;
     int dragCol;
 
     void renderCell(int i, int j, bool shouldDisplay) const;
-    void moveToNextActive(int dRow, int dCol); // navigate only active slots
+    void moveToNextActive(int dRow, int dCol);
 
 public:
     Inventory();
@@ -51,36 +52,38 @@ public:
 
     bool isActive(int row, int col) const;
 
-    // Drag and drop
-    bool equipItem(); // Move item at cursor to a random equipment slot (cols 3-4)
+    bool equipItem();
     bool startDrag();
     bool dropItem();
     void cancelDrag();
     bool getIsDragging() const;
 
-    // Filtering
     void setFilter(Rarity rarity);
     void clearFilter();
     bool isFilterEnabled() const;
     Rarity getCurrentFilter() const;
+
+    void setTypeFilter(ItemType type);
+    void clearTypeFilter();
+    bool isTypeFilterEnabled() const;
+    ItemType getCurrentTypeFilter() const;
+
+    void clearAllFilters();
     int getFilteredItemCount() const;
 
-    // Getters/setters
     void clear();
     int getRows() const { return ROWS; }
     int getCols() const { return COLS; }
-    Item*** getItems() const; // legacy
+    Item*** getItems() const;
     int getCurrentRow() const { return currentRow; }
     int getCurrentCol() const { return currentCol; }
     void setCurrentRow(int r);
     void setCurrentCol(int c);
 
-    // raw 2d access for game.cpp placement / sell logic
     Item* getItemAt(int r, int c) const;
     void setItemAt(int r, int c, Item* item);
 
-    // legacy compat
-    Item ***getItemsGrid() const;
+    Item*** getItemsGrid() const;
 };
 
 #endif // INVENTORY_H

@@ -17,15 +17,16 @@ enum ItemType {
     movement
 };
 
-class Item {
-protected:
+class Item
+{
+private:
     std::string name;
     Rarity rarity;
     ItemType type;
     int durability;
     int level;
     int price;
-    int statValue; // actual gameplay strength
+    int percentValue;
 
 public:
     Item();
@@ -49,11 +50,14 @@ public:
     int getPrice() const;
     void setPrice(int newPrice);
 
-    int getStatValue() const;
-    void setStatValue(int newStatValue);
+    int getPercentValue() const;
+    void setPercentValue(int newPercentValue);
 
     void use();
     void displayItemInfo() const;
+
+    static std::string rarityToString(Rarity rarity);
+    static std::string typeToString(ItemType type);
 };
 
 #endif // ITEM_H

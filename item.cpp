@@ -1,5 +1,26 @@
 #include "item.h"
-#include <cstdlib>
+
+Item::Item()
+    : name("Potion"),
+      rarity(common),
+      type(potion),
+      durability(100),
+      level(1),
+      price(10),
+      percentValue(10)
+{
+}
+
+Item::Item(const std::string& name, int price, ItemType type)
+    : name(name),
+      rarity(common),
+      type(type),
+      durability(100),
+      level(1),
+      price(price),
+      percentValue(10)
+{
+}
 
 std::string Item::getName() const {
     return name;
@@ -49,59 +70,44 @@ void Item::setPrice(int newPrice) {
     price = newPrice;
 }
 
-int Item::getStatValue() const {
-    return statValue;
+int Item::getPercentValue() const {
+    return percentValue;
 }
 
-void Item::setStatValue(int newStatValue) {
-    statValue = newStatValue;
+void Item::setPercentValue(int newPercentValue) {
+    percentValue = newPercentValue;
 }
 
 void Item::use() {
 }
 
-Item::Item() {
-    name = "Potion";
-    price = 10;
-    durability = 100;
-    level = 1;
-    rarity = common;
-    type = potion;
-    statValue = 20;
+std::string Item::rarityToString(Rarity rarity) {
+    switch (rarity) {
+        case common: return "Common";
+        case magic: return "Magic";
+        case rare: return "Rare";
+    }
+    return "Unknown";
 }
 
-Item::Item(const std::string& name, int price, ItemType type)
-    : name(name), type(type), durability(100), level(1), price(price), statValue(0) {
-    int randNum = rand() % 100;
-    if(randNum < 60) rarity = common;
-    else if(randNum < 90) rarity = magic;
-    else rarity = rare;
+std::string Item::typeToString(ItemType type) {
+    switch (type) {
+        case potion: return "Potion";
+        case sword: return "Sword";
+        case armor: return "Armor";
+        case movement: return "Movement";
+    }
+    return "Unknown";
 }
 
 void Item::displayItemInfo() const {
     std::cout << "\n=== Item Information ===" << std::endl;
     std::cout << "Name: " << name << std::endl;
-
-    std::cout << "Type: ";
-    switch(type) {
-        case potion: std::cout << "Potion"; break;
-        case sword: std::cout << "Sword"; break;
-        case armor: std::cout << "Armor"; break;
-        case movement: std::cout << "Movement"; break;
-    }
-    std::cout << std::endl;
-
-    std::cout << "Price: " << price << std::endl;
+    std::cout << "Type: " << typeToString(type) << std::endl;
+    std::cout << "Price: " << price << "g" << std::endl;
     std::cout << "Durability: " << durability << std::endl;
     std::cout << "Level: " << level << std::endl;
-    std::cout << "Value: " << statValue << std::endl;
-
-    std::cout << "Rarity: ";
-    switch(rarity) {
-        case common: std::cout << "Common"; break;
-        case magic: std::cout << "Magic"; break;
-        case rare: std::cout << "Rare"; break;
-    }
-    std::cout << std::endl;
+    std::cout << "Rarity: " << rarityToString(rarity) << std::endl;
+    std::cout << "Effect: " << percentValue << "%" << std::endl;
     std::cout << "========================" << std::endl;
 }

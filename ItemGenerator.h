@@ -1,82 +1,32 @@
-#ifndef INVENTORY_H
-#define INVENTORY_H
+#ifndef ITEMGENERATOR_H
+#define ITEMGENERATOR_H
 
 #include "item.h"
 #include <string>
+#include <vector>
 
-class Inventory {
+class ItemGenerator
+{
 private:
-    static const int ROWS = 3;
-    static const int COLS = 8;
-    Item* items[ROWS][COLS];
-    bool activeSlots[ROWS][COLS];
-
-    int currentRow;
-    int currentCol;
-
-    Rarity currentFilter;
-    bool filterEnabled;
-
-    ItemType currentTypeFilter;
-    bool typeFilterEnabled;
-
-    bool isDragging;
-    int dragRow;
-    int dragCol;
-
-    void renderCell(int i, int j, bool shouldDisplay) const;
-    void moveToNextActive(int dRow, int dCol);
+    std::vector<ItemType> itemTypes;
+    int minPrice;
+    int maxPrice;
 
 public:
-    Inventory();
-    ~Inventory();
+    ItemGenerator();
 
-    void display();
-    void displayWithItemInfo(Item* item);
-    void displayWithEmptyInfo();
+    Item* generateRandomItem();
+    std::vector<Item*> generateRandomItems(int minCount, int maxCount);
 
-    bool addItem(Item* item);
-    bool addItemAtPosition(Item* item, int row, int col);
-    bool addItemAtRandomPosition(Item* item);
-    Item* getCurrentItem() const;
-    int getEmptySlotCount() const;
-    std::string getItemDisplayStr(int row, int col) const;
+    ItemType getRandomItemType() const;
+    Rarity getRandomRarity() const;
 
-    bool isActive(int row, int col) const;
+    std::string getItemNameFromType(ItemType type) const;
+    int getPercentForRarity(ItemType type, Rarity rarity) const;
+    int getPriceFor(ItemType type, Rarity rarity) const;
 
-    bool equipItem();
-    bool startDrag();
-    bool dropItem();
-    void cancelDrag();
-    bool getIsDragging() const;
-
-    void setFilter(Rarity rarity);
-    void clearFilter();
-    bool isFilterEnabled() const;
-    Rarity getCurrentFilter() const;
-
-    void setTypeFilter(ItemType type);
-    void clearTypeFilter();
-    bool isTypeFilterEnabled() const;
-    ItemType getCurrentTypeFilter() const;
-
-    void clearAllFilters();
-
-    int getFilteredItemCount() const;
-
-    void clear();
-    int getRows() const { return ROWS; }
-    int getCols() const { return COLS; }
-    Item*** getItems() const;
-    int getCurrentRow() const { return currentRow; }
-    int getCurrentCol() const { return currentCol; }
-    void setCurrentRow(int r);
-    void setCurrentCol(int c);
-
-    Item* getItemAt(int r, int c) const;
-    void setItemAt(int r, int c, Item* item);
-
-    Item*** getItemsGrid() const;
+    void setMinPrice(int price);
+    void setMaxPrice(int price);
 };
 
-#endif // INVENTORY_H
+#endif // ITEMGENERATOR_H
