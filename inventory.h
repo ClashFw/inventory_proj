@@ -1,33 +1,26 @@
 #ifndef INVENTORY_H
 #define INVENTORY_H
+
 #include "item.h"
 #include <string>
 
-// Layout uses a fixed 4x6 grid.
-// Some cells are INACTIVE (no slot) to form the shaped layout.
-// Active slot map (row, col):
+// Layout uses a fixed 2x5 grid.
+// Bag side:   cols 0–2 (2x3 = 6 slots)
+// Equip side: cols 3–4 (2x2 = 4 slots)
 //
-//  Equipment side (cols 0-2):       Bag side (cols 4-5):
-//  Row 0:  . H .  . .               (H = Head)
-//  Row 1:  L B R  . .               (L=Left, B=Body, R=Right)
-//  Row 2:  . G .  Q Q               (G=Groin/Legs, Q=quick bag)
-//  Row 3:  . f s  . .               (f=foot-left, s=foot-right / boots)
-//
-// col indices: 0  1  2  3  4  5
-//              ^equip^   gap ^bag^
+// row 0: [BAG][BAG][BAG][EQUIP][EQUIP]
+// row 1: [BAG][BAG][BAG][EQUIP][EQUIP]
 
 class Inventory
 {
 private:
-    // Grid storage: 4 rows x 6 cols
-    static const int ROWS = 3;
-    static const int COLS = 8;
+    // Grid storage: 2 rows x 5 cols
+    static const int ROWS = 2;
+    static const int COLS = 5;
     Item* items[ROWS][COLS];
 
     // Which cells are valid slots
     bool activeSlots[ROWS][COLS];
-
-    // Slot labels for equipment display
 
     int currentRow;
     int currentCol;
@@ -59,7 +52,7 @@ public:
     bool isActive(int row, int col) const;
 
     // Drag and drop
-    bool equipItem(); // Move item at cursor to a random equipment slot (cols 4-7)
+    bool equipItem(); // Move item at cursor to a random equipment slot (cols 3-4)
     bool startDrag();
     bool dropItem();
     void cancelDrag();
@@ -72,11 +65,11 @@ public:
     Rarity getCurrentFilter() const;
     int getFilteredItemCount() const;
 
-    // Getters/setters (keep compatible interface)
+    // Getters/setters
     void clear();
     int getRows() const { return ROWS; }
     int getCols() const { return COLS; }
-    Item*** getItems() const; // returns flat accessor — see .cpp
+    Item*** getItems() const; // legacy
     int getCurrentRow() const { return currentRow; }
     int getCurrentCol() const { return currentCol; }
     void setCurrentRow(int r);
@@ -84,7 +77,7 @@ public:
 
     // raw 2d access for game.cpp placement / sell logic
     Item* getItemAt(int r, int c) const;
-    void  setItemAt(int r, int c, Item* item);
+    void setItemAt(int r, int c, Item* item);
 
     // legacy compat
     Item ***getItemsGrid() const;

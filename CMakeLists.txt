@@ -5,16 +5,20 @@ project(inventory LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_executable(inventory main.cpp
+add_executable(inventory
+        main.cpp
         item.h item.cpp
         inventory.h inventory.cpp
         player.cpp
         player.h
+        servant.cpp
+        servant.h
+        Enemy.h
         game.cpp
         game.h
         singleCharacter.h
-        itemGenerator.cpp
-        itemGenerator.h
+        ItemGenerator.cpp
+        ItemGenerator.h
         Shop.cpp
         Shop.h
 )

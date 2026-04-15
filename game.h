@@ -1,8 +1,11 @@
 #ifndef GAME_H
 #define GAME_H
+
 #include "player.h"
 #include "ItemGenerator.h"
 #include "shop.h"
+#include "enemy.h"
+#include "servant.h"
 
 class Game
 {
@@ -10,9 +13,11 @@ private:
     Player* player;
     ItemGenerator* itemGenerator;
     Shop* shop;
+
 public:
     Game();
     ~Game();
+
     void showMainMenu();
     void play();
     void playShop();
@@ -22,9 +27,14 @@ public:
     void showSellConfirmScreen(Item* item, int row, int col);
     void initializeSampleItems();
     void generateRandomInventory();
-    Player *getPlayer() const;
-    void setPlayer(Player *newPlayer);
-    Shop *getShop() const;
+
+    Player* getPlayer() const;
+    void setPlayer(Player* newPlayer);
+    Shop* getShop() const;
+
+private:
+    void playBattleArena();
+    void battleOneEnemy(Enemy& enemy);
 };
 
 #endif // GAME_H
