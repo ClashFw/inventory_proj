@@ -1,0 +1,7 @@
+/Users/franciszekwasiak/CLionProjects/inventory_proj/build/CMakeFiles/inventory.dir
+/Users/franciszekwasiak/CLionProjects/inventory_proj/build/CMakeFiles/edit_cache.dir
+/Users/franciszekwasiak/CLionProjects/inventory_proj/build/CMakeFiles/rebuild_cache.dir
+/Users/franciszekwasiak/CLionProjects/inventory_proj/build/CMakeFiles/list_install_components.dir
+/Users/franciszekwasiak/CLionProjects/inventory_proj/build/CMakeFiles/install.dir
+/Users/franciszekwasiak/CLionProjects/inventory_proj/build/CMakeFiles/install/local.dir
+/Users/franciszekwasiak/CLionProjects/inventory_proj/build/CMakeFiles/install/strip.dir

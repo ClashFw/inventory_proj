@@ -1,0 +1,1 @@
+/usr/bin/c++  -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/inventory.dir/main.cpp.o CMakeFiles/inventory.dir/item.cpp.o CMakeFiles/inventory.dir/inventory.cpp.o CMakeFiles/inventory.dir/player.cpp.o CMakeFiles/inventory.dir/game.cpp.o CMakeFiles/inventory.dir/itemGenerator.cpp.o CMakeFiles/inventory.dir/Shop.cpp.o -o inventory
