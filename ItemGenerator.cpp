@@ -15,8 +15,8 @@ ItemType ItemGenerator::getRandomItemType() const {
 Rarity ItemGenerator::getRandomRarity() const {
     int randNum = rand() % 100;
 
-    if (randNum < 60) return common;
-    if (randNum < 90) return magic;
+    if (randNum < 40) return common;
+    if (randNum < 70) return magic;
     return rare;
 }
 
@@ -41,9 +41,9 @@ int ItemGenerator::getPercentForRarity(ItemType type, Rarity rarity) const {
             break;
         case sword:
             switch (rarity) {
-                case common: return 8;
-                case magic: return 16;
-                case rare: return 28;
+                case common: return 7;
+                case magic: return 12;
+                case rare: return 17;
             }
             break;
         case armor:
