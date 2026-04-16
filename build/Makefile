@@ -174,6 +174,30 @@ inventory/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/inventory.dir/build.make CMakeFiles/inventory.dir/build
 .PHONY : inventory/fast
 
+ItemGenerator.o: ItemGenerator.cpp.o
+.PHONY : ItemGenerator.o
+
+# target to build an object file
+ItemGenerator.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/inventory.dir/build.make CMakeFiles/inventory.dir/ItemGenerator.cpp.o
+.PHONY : ItemGenerator.cpp.o
+
+ItemGenerator.i: ItemGenerator.cpp.i
+.PHONY : ItemGenerator.i
+
+# target to preprocess a source file
+ItemGenerator.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/inventory.dir/build.make CMakeFiles/inventory.dir/ItemGenerator.cpp.i
+.PHONY : ItemGenerator.cpp.i
+
+ItemGenerator.s: ItemGenerator.cpp.s
+.PHONY : ItemGenerator.s
+
+# target to generate assembly for a file
+ItemGenerator.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/inventory.dir/build.make CMakeFiles/inventory.dir/ItemGenerator.cpp.s
+.PHONY : ItemGenerator.cpp.s
+
 Shop.o: Shop.cpp.o
 .PHONY : Shop.o
 
@@ -270,30 +294,6 @@ item.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/inventory.dir/build.make CMakeFiles/inventory.dir/item.cpp.s
 .PHONY : item.cpp.s
 
-itemGenerator.o: itemGenerator.cpp.o
-.PHONY : itemGenerator.o
-
-# target to build an object file
-itemGenerator.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/inventory.dir/build.make CMakeFiles/inventory.dir/itemGenerator.cpp.o
-.PHONY : itemGenerator.cpp.o
-
-itemGenerator.i: itemGenerator.cpp.i
-.PHONY : itemGenerator.i
-
-# target to preprocess a source file
-itemGenerator.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/inventory.dir/build.make CMakeFiles/inventory.dir/itemGenerator.cpp.i
-.PHONY : itemGenerator.cpp.i
-
-itemGenerator.s: itemGenerator.cpp.s
-.PHONY : itemGenerator.s
-
-# target to generate assembly for a file
-itemGenerator.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/inventory.dir/build.make CMakeFiles/inventory.dir/itemGenerator.cpp.s
-.PHONY : itemGenerator.cpp.s
-
 main.o: main.cpp.o
 .PHONY : main.o
 
@@ -342,6 +342,30 @@ player.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/inventory.dir/build.make CMakeFiles/inventory.dir/player.cpp.s
 .PHONY : player.cpp.s
 
+servant.o: servant.cpp.o
+.PHONY : servant.o
+
+# target to build an object file
+servant.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/inventory.dir/build.make CMakeFiles/inventory.dir/servant.cpp.o
+.PHONY : servant.cpp.o
+
+servant.i: servant.cpp.i
+.PHONY : servant.i
+
+# target to preprocess a source file
+servant.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/inventory.dir/build.make CMakeFiles/inventory.dir/servant.cpp.i
+.PHONY : servant.cpp.i
+
+servant.s: servant.cpp.s
+.PHONY : servant.s
+
+# target to generate assembly for a file
+servant.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/inventory.dir/build.make CMakeFiles/inventory.dir/servant.cpp.s
+.PHONY : servant.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -355,6 +379,9 @@ help:
 	@echo "... list_install_components"
 	@echo "... rebuild_cache"
 	@echo "... inventory"
+	@echo "... ItemGenerator.o"
+	@echo "... ItemGenerator.i"
+	@echo "... ItemGenerator.s"
 	@echo "... Shop.o"
 	@echo "... Shop.i"
 	@echo "... Shop.s"
@@ -367,15 +394,15 @@ help:
 	@echo "... item.o"
 	@echo "... item.i"
 	@echo "... item.s"
-	@echo "... itemGenerator.o"
-	@echo "... itemGenerator.i"
-	@echo "... itemGenerator.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
 	@echo "... player.o"
 	@echo "... player.i"
 	@echo "... player.s"
+	@echo "... servant.o"
+	@echo "... servant.i"
+	@echo "... servant.s"
 .PHONY : help
 
 

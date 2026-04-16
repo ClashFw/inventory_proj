@@ -102,8 +102,8 @@ std::string Item::typeToString(ItemType type) {
 
 void Item::displayItemInfo() const {
     std::cout << "\n=== Item Information ===" << std::endl;
-    std::cout << "Name: " << name << std::endl;
-    std::cout << "Type: " << typeToString(type) << std::endl;
+    std::cout << "\n Name: " << name << std::endl;
+    std::cout << "\n Type: " << typeToString(type) << std::endl;
     std::cout << "Price: " << price << "g" << std::endl;
     std::cout << "Durability: " << durability << std::endl;
     std::cout << "Level: " << level << std::endl;

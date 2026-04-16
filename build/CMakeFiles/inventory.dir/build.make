@@ -128,10 +128,24 @@ CMakeFiles/inventory.dir/player.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/inventory.dir/player.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/franciszekwasiak/CLionProjects/inventory_proj/player.cpp -o CMakeFiles/inventory.dir/player.cpp.s
 
+CMakeFiles/inventory.dir/servant.cpp.o: CMakeFiles/inventory.dir/flags.make
+CMakeFiles/inventory.dir/servant.cpp.o: /Users/franciszekwasiak/CLionProjects/inventory_proj/servant.cpp
+CMakeFiles/inventory.dir/servant.cpp.o: CMakeFiles/inventory.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/franciszekwasiak/CLionProjects/inventory_proj/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/inventory.dir/servant.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/inventory.dir/servant.cpp.o -MF CMakeFiles/inventory.dir/servant.cpp.o.d -o CMakeFiles/inventory.dir/servant.cpp.o -c /Users/franciszekwasiak/CLionProjects/inventory_proj/servant.cpp
+
+CMakeFiles/inventory.dir/servant.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/inventory.dir/servant.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/franciszekwasiak/CLionProjects/inventory_proj/servant.cpp > CMakeFiles/inventory.dir/servant.cpp.i
+
+CMakeFiles/inventory.dir/servant.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/inventory.dir/servant.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/franciszekwasiak/CLionProjects/inventory_proj/servant.cpp -o CMakeFiles/inventory.dir/servant.cpp.s
+
 CMakeFiles/inventory.dir/game.cpp.o: CMakeFiles/inventory.dir/flags.make
 CMakeFiles/inventory.dir/game.cpp.o: /Users/franciszekwasiak/CLionProjects/inventory_proj/game.cpp
 CMakeFiles/inventory.dir/game.cpp.o: CMakeFiles/inventory.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/franciszekwasiak/CLionProjects/inventory_proj/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/inventory.dir/game.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/franciszekwasiak/CLionProjects/inventory_proj/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/inventory.dir/game.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/inventory.dir/game.cpp.o -MF CMakeFiles/inventory.dir/game.cpp.o.d -o CMakeFiles/inventory.dir/game.cpp.o -c /Users/franciszekwasiak/CLionProjects/inventory_proj/game.cpp
 
 CMakeFiles/inventory.dir/game.cpp.i: cmake_force
@@ -142,24 +156,24 @@ CMakeFiles/inventory.dir/game.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/inventory.dir/game.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/franciszekwasiak/CLionProjects/inventory_proj/game.cpp -o CMakeFiles/inventory.dir/game.cpp.s
 
-CMakeFiles/inventory.dir/itemGenerator.cpp.o: CMakeFiles/inventory.dir/flags.make
-CMakeFiles/inventory.dir/itemGenerator.cpp.o: /Users/franciszekwasiak/CLionProjects/inventory_proj/itemGenerator.cpp
-CMakeFiles/inventory.dir/itemGenerator.cpp.o: CMakeFiles/inventory.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/franciszekwasiak/CLionProjects/inventory_proj/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/inventory.dir/itemGenerator.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/inventory.dir/itemGenerator.cpp.o -MF CMakeFiles/inventory.dir/itemGenerator.cpp.o.d -o CMakeFiles/inventory.dir/itemGenerator.cpp.o -c /Users/franciszekwasiak/CLionProjects/inventory_proj/itemGenerator.cpp
+CMakeFiles/inventory.dir/ItemGenerator.cpp.o: CMakeFiles/inventory.dir/flags.make
+CMakeFiles/inventory.dir/ItemGenerator.cpp.o: /Users/franciszekwasiak/CLionProjects/inventory_proj/ItemGenerator.cpp
+CMakeFiles/inventory.dir/ItemGenerator.cpp.o: CMakeFiles/inventory.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/franciszekwasiak/CLionProjects/inventory_proj/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/inventory.dir/ItemGenerator.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/inventory.dir/ItemGenerator.cpp.o -MF CMakeFiles/inventory.dir/ItemGenerator.cpp.o.d -o CMakeFiles/inventory.dir/ItemGenerator.cpp.o -c /Users/franciszekwasiak/CLionProjects/inventory_proj/ItemGenerator.cpp
 
-CMakeFiles/inventory.dir/itemGenerator.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/inventory.dir/itemGenerator.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/franciszekwasiak/CLionProjects/inventory_proj/itemGenerator.cpp > CMakeFiles/inventory.dir/itemGenerator.cpp.i
+CMakeFiles/inventory.dir/ItemGenerator.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/inventory.dir/ItemGenerator.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/franciszekwasiak/CLionProjects/inventory_proj/ItemGenerator.cpp > CMakeFiles/inventory.dir/ItemGenerator.cpp.i
 
-CMakeFiles/inventory.dir/itemGenerator.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/inventory.dir/itemGenerator.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/franciszekwasiak/CLionProjects/inventory_proj/itemGenerator.cpp -o CMakeFiles/inventory.dir/itemGenerator.cpp.s
+CMakeFiles/inventory.dir/ItemGenerator.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/inventory.dir/ItemGenerator.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/franciszekwasiak/CLionProjects/inventory_proj/ItemGenerator.cpp -o CMakeFiles/inventory.dir/ItemGenerator.cpp.s
 
 CMakeFiles/inventory.dir/Shop.cpp.o: CMakeFiles/inventory.dir/flags.make
 CMakeFiles/inventory.dir/Shop.cpp.o: /Users/franciszekwasiak/CLionProjects/inventory_proj/Shop.cpp
 CMakeFiles/inventory.dir/Shop.cpp.o: CMakeFiles/inventory.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/franciszekwasiak/CLionProjects/inventory_proj/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/inventory.dir/Shop.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/franciszekwasiak/CLionProjects/inventory_proj/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/inventory.dir/Shop.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/inventory.dir/Shop.cpp.o -MF CMakeFiles/inventory.dir/Shop.cpp.o.d -o CMakeFiles/inventory.dir/Shop.cpp.o -c /Users/franciszekwasiak/CLionProjects/inventory_proj/Shop.cpp
 
 CMakeFiles/inventory.dir/Shop.cpp.i: cmake_force
@@ -176,8 +190,9 @@ inventory_OBJECTS = \
 "CMakeFiles/inventory.dir/item.cpp.o" \
 "CMakeFiles/inventory.dir/inventory.cpp.o" \
 "CMakeFiles/inventory.dir/player.cpp.o" \
+"CMakeFiles/inventory.dir/servant.cpp.o" \
 "CMakeFiles/inventory.dir/game.cpp.o" \
-"CMakeFiles/inventory.dir/itemGenerator.cpp.o" \
+"CMakeFiles/inventory.dir/ItemGenerator.cpp.o" \
 "CMakeFiles/inventory.dir/Shop.cpp.o"
 
 # External object files for target inventory
@@ -187,12 +202,13 @@ inventory: CMakeFiles/inventory.dir/main.cpp.o
 inventory: CMakeFiles/inventory.dir/item.cpp.o
 inventory: CMakeFiles/inventory.dir/inventory.cpp.o
 inventory: CMakeFiles/inventory.dir/player.cpp.o
+inventory: CMakeFiles/inventory.dir/servant.cpp.o
 inventory: CMakeFiles/inventory.dir/game.cpp.o
-inventory: CMakeFiles/inventory.dir/itemGenerator.cpp.o
+inventory: CMakeFiles/inventory.dir/ItemGenerator.cpp.o
 inventory: CMakeFiles/inventory.dir/Shop.cpp.o
 inventory: CMakeFiles/inventory.dir/build.make
 inventory: CMakeFiles/inventory.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/Users/franciszekwasiak/CLionProjects/inventory_proj/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Linking CXX executable inventory"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/Users/franciszekwasiak/CLionProjects/inventory_proj/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Linking CXX executable inventory"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/inventory.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
