@@ -24,12 +24,6 @@ Inventory::Inventory()
     currentRow = 0;
     currentCol = 0;
 
-    filterEnabled = false;
-    currentFilter = common;
-
-    typeFilterEnabled = false;
-    currentTypeFilter = potion;
-
     isDragging = false;
     dragRow = -1;
     dragCol = -1;
@@ -42,7 +36,8 @@ Inventory::Inventory()
     }
 }
 
-Inventory::~Inventory() {
+Inventory::~Inventory()
+{
     clear();
 }
 
@@ -81,8 +76,15 @@ Item* Inventory::getCurrentItem() const
     return items[currentRow][currentCol];
 }
 
-Item*** Inventory::getItems() const { return nullptr; }
-Item*** Inventory::getItemsGrid() const { return nullptr; }
+Item*** Inventory::getItems() const
+{
+    return nullptr;
+}
+
+Item*** Inventory::getItemsGrid() const
+{
+    return nullptr;
+}
 
 void Inventory::moveToNextActive(int dRow, int dCol)
 {
@@ -108,12 +110,16 @@ void Inventory::moveToNextActive(int dRow, int dCol)
 
 void Inventory::setCurrentRow(int r)
 {
-    if (r != currentRow) moveToNextActive((r < currentRow) ? -1 : 1, 0);
+    if (r != currentRow) {
+        moveToNextActive((r < currentRow) ? -1 : 1, 0);
+    }
 }
 
 void Inventory::setCurrentCol(int c)
 {
-    if (c != currentCol) moveToNextActive(0, (c < currentCol) ? -1 : 1);
+    if (c != currentCol) {
+        moveToNextActive(0, (c < currentCol) ? -1 : 1);
+    }
 }
 
 std::string Inventory::getItemDisplayStr(int row, int col) const
@@ -128,7 +134,7 @@ std::string Inventory::getItemDisplayStr(int row, int col) const
     return r;
 }
 
-void Inventory::renderCell(int i, int j, bool shouldDisplay) const
+void Inventory::renderCell(int i, int j) const
 {
     if (!activeSlots[i][j]) {
         std::cout << " ";
@@ -144,22 +150,9 @@ void Inventory::renderCell(int i, int j, bool shouldDisplay) const
     if (isDragSrc && !carrying) std::cout << "   ";
     else if (carrying) std::cout << getItemDisplayStr(dragRow, dragCol);
     else if (!items[i][j]) std::cout << "   ";
-    else if (shouldDisplay) std::cout << getItemDisplayStr(i, j);
-    else std::cout << "···";
+    else std::cout << getItemDisplayStr(i, j);
 
     std::cout << (isCursor ? "> " : "] ");
-}
-
-static bool itemPassesFilters(const Item* item,
-                              bool rarityEnabled,
-                              Rarity rarity,
-                              bool typeEnabled,
-                              ItemType type)
-{
-    if (!item) return false;
-    if (rarityEnabled && item->getRarity() != rarity) return false;
-    if (typeEnabled && item->getType() != type) return false;
-    return true;
 }
 
 void Inventory::display()
@@ -167,13 +160,7 @@ void Inventory::display()
     std::cout << std::endl;
     for (int i = 0; i < ROWS; i++) {
         for (int j = 0; j < COLS; j++) {
-            bool sd = true;
-            if (activeSlots[i][j] && items[i][j]) {
-                sd = itemPassesFilters(items[i][j],
-                                       filterEnabled, currentFilter,
-                                       typeFilterEnabled, currentTypeFilter);
-            }
-            renderCell(i, j, sd);
+            renderCell(i, j);
         }
         std::cout << std::endl;
     }
@@ -194,13 +181,7 @@ void Inventory::displayWithItemInfo(Item* item)
     std::cout << std::endl;
     for (int i = 0; i < ROWS; i++) {
         for (int j = 0; j < COLS; j++) {
-            bool sd = true;
-            if (activeSlots[i][j] && items[i][j]) {
-                sd = itemPassesFilters(items[i][j],
-                                       filterEnabled, currentFilter,
-                                       typeFilterEnabled, currentTypeFilter);
-            }
-            renderCell(i, j, sd);
+            renderCell(i, j);
         }
 
         std::cout << " ";
@@ -220,13 +201,7 @@ void Inventory::displayWithEmptyInfo()
     std::cout << std::endl;
     for (int i = 0; i < ROWS; i++) {
         for (int j = 0; j < COLS; j++) {
-            bool sd = true;
-            if (activeSlots[i][j] && items[i][j]) {
-                sd = itemPassesFilters(items[i][j],
-                                       filterEnabled, currentFilter,
-                                       typeFilterEnabled, currentTypeFilter);
-            }
-            renderCell(i, j, sd);
+            renderCell(i, j);
         }
         std::cout << std::endl;
     }
@@ -334,69 +309,4 @@ void Inventory::cancelDrag()
 bool Inventory::getIsDragging() const
 {
     return isDragging;
-}
-
-void Inventory::setFilter(Rarity rarity)
-{
-    filterEnabled = true;
-    currentFilter = rarity;
-}
-
-void Inventory::clearFilter()
-{
-    filterEnabled = false;
-}
-
-bool Inventory::isFilterEnabled() const
-{
-    return filterEnabled;
-}
-
-Rarity Inventory::getCurrentFilter() const
-{
-    return currentFilter;
-}
-
-void Inventory::setTypeFilter(ItemType type)
-{
-    typeFilterEnabled = true;
-    currentTypeFilter = type;
-}
-
-void Inventory::clearTypeFilter()
-{
-    typeFilterEnabled = false;
-}
-
-bool Inventory::isTypeFilterEnabled() const
-{
-    return typeFilterEnabled;
-}
-
-ItemType Inventory::getCurrentTypeFilter() const
-{
-    return currentTypeFilter;
-}
-
-void Inventory::clearAllFilters()
-{
-    filterEnabled = false;
-    typeFilterEnabled = false;
-}
-
-int Inventory::getFilteredItemCount() const
-{
-    int n = 0;
-    for (int i = 0; i < ROWS; i++) {
-        for (int j = 0; j < COLS; j++) {
-            if (activeSlots[i][j] && items[i][j]) {
-                if (itemPassesFilters(items[i][j],
-                                      filterEnabled, currentFilter,
-                                      typeFilterEnabled, currentTypeFilter)) {
-                    n++;
-                }
-            }
-        }
-    }
-    return n;
 }

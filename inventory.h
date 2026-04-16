@@ -22,17 +22,11 @@ private:
     int currentRow;
     int currentCol;
 
-    Rarity currentFilter;
-    bool filterEnabled;
-
-    ItemType currentTypeFilter;
-    bool typeFilterEnabled;
-
     bool isDragging;
     int dragRow;
     int dragCol;
 
-    void renderCell(int i, int j, bool shouldDisplay) const;
+    void renderCell(int i, int j) const;
     void moveToNextActive(int dRow, int dCol);
 
 public:
@@ -57,19 +51,6 @@ public:
     bool dropItem();
     void cancelDrag();
     bool getIsDragging() const;
-
-    void setFilter(Rarity rarity);
-    void clearFilter();
-    bool isFilterEnabled() const;
-    Rarity getCurrentFilter() const;
-
-    void setTypeFilter(ItemType type);
-    void clearTypeFilter();
-    bool isTypeFilterEnabled() const;
-    ItemType getCurrentTypeFilter() const;
-
-    void clearAllFilters();
-    int getFilteredItemCount() const;
 
     void clear();
     int getRows() const { return ROWS; }
