@@ -80,16 +80,16 @@ cmake --build .
 
 ```
 inventory/
-├── CMakeLists.txt          # Build configuration
-├── main.cpp                # Entry point, seeds RNG
-├── game.h / game.cpp       # Main game loop, input handling
-├── player.h / player.cpp   # Player class
+├── CMakeLists.txt               # Build configuration
+├── main.cpp                     # Entry point, seeds RNG
+├── game.h / game.cpp            # Main game loop, input handling
+├── player.h / player.cpp        # Player class
 ├── inventory.h / inventory.cpp  # Grid, display, filtering, drag & drop
-├── item.h / item.cpp       # Item properties and rarity
-├── ItemGenerator.h / .cpp  # Random item factory
-├── shop.h / shop.cpp       # Shop, buy/sell, search, navigation
-├── singleCharacter.h       # Cross-platform raw keyboard input
-├── inventory_uml.drawio    # UML class diagram (draw.io)
+├── item.h / item.cpp            # Item properties and rarity
+├── ItemGenerator.h / .cpp       # Random item factory
+├── shop.h / shop.cpp            # Shop, buy/sell, search, navigation
+├── singleCharacter.h            # Cross-platform raw keyboard input
+├── inventory_uml.drawio         # UML class diagram (draw.io)
 └── README.md
 ```
 
@@ -126,4 +126,3 @@ Instead of a single initial, the grid shows the minimum prefix needed to tell it
 ## Drag & Drop
 
 Press `G` on any occupied slot to pick it up — the source slot shows `< >` and the item follows your cursor as `{XXX}`. Navigate to any destination and press `G` again to place it. If the destination already holds an item the two are swapped. Press `Q` to cancel and return the item to its original slot.
-
