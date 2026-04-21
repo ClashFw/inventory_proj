@@ -5,14 +5,20 @@
 #include "ItemGenerator.h"
 #include "shop.h"
 #include "enemy.h"
-#include "servant.h"
+#include <set>
+#include <string>
 
 class Game
 {
 private:
-    Player* player;
+    Player*        player;
     ItemGenerator* itemGenerator;
-    Shop* shop;
+    Shop*          shop;
+
+    std::set<std::string> defeatedEnemies;
+
+    void playBattleArena();
+    bool battleOneEnemy(Enemy& enemy);
 
 public:
     Game();
@@ -29,12 +35,8 @@ public:
     void generateRandomInventory();
 
     Player* getPlayer() const;
-    void setPlayer(Player* newPlayer);
-    Shop* getShop() const;
-
-private:
-    void playBattleArena();
-    void battleOneEnemy(Enemy& enemy);
+    void    setPlayer(Player* newPlayer);
+    Shop*   getShop()   const;
 };
 
 #endif // GAME_H
