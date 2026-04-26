@@ -1,8 +1,6 @@
 file(REMOVE_RECURSE
   "CMakeFiles/inventory.dir/ItemGenerator.cpp.o"
   "CMakeFiles/inventory.dir/ItemGenerator.cpp.o.d"
-  "CMakeFiles/inventory.dir/Shop.cpp.o"
-  "CMakeFiles/inventory.dir/Shop.cpp.o.d"
   "CMakeFiles/inventory.dir/game.cpp.o"
   "CMakeFiles/inventory.dir/game.cpp.o.d"
   "CMakeFiles/inventory.dir/inventory.cpp.o"
@@ -15,6 +13,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/inventory.dir/player.cpp.o.d"
   "CMakeFiles/inventory.dir/servant.cpp.o"
   "CMakeFiles/inventory.dir/servant.cpp.o.d"
+  "CMakeFiles/inventory.dir/shop.cpp.o"
+  "CMakeFiles/inventory.dir/shop.cpp.o.d"
   "inventory"
   "inventory.pdb"
 )

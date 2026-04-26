@@ -198,30 +198,6 @@ ItemGenerator.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/inventory.dir/build.make CMakeFiles/inventory.dir/ItemGenerator.cpp.s
 .PHONY : ItemGenerator.cpp.s
 
-Shop.o: Shop.cpp.o
-.PHONY : Shop.o
-
-# target to build an object file
-Shop.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/inventory.dir/build.make CMakeFiles/inventory.dir/Shop.cpp.o
-.PHONY : Shop.cpp.o
-
-Shop.i: Shop.cpp.i
-.PHONY : Shop.i
-
-# target to preprocess a source file
-Shop.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/inventory.dir/build.make CMakeFiles/inventory.dir/Shop.cpp.i
-.PHONY : Shop.cpp.i
-
-Shop.s: Shop.cpp.s
-.PHONY : Shop.s
-
-# target to generate assembly for a file
-Shop.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/inventory.dir/build.make CMakeFiles/inventory.dir/Shop.cpp.s
-.PHONY : Shop.cpp.s
-
 game.o: game.cpp.o
 .PHONY : game.o
 
@@ -366,6 +342,30 @@ servant.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/inventory.dir/build.make CMakeFiles/inventory.dir/servant.cpp.s
 .PHONY : servant.cpp.s
 
+shop.o: shop.cpp.o
+.PHONY : shop.o
+
+# target to build an object file
+shop.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/inventory.dir/build.make CMakeFiles/inventory.dir/shop.cpp.o
+.PHONY : shop.cpp.o
+
+shop.i: shop.cpp.i
+.PHONY : shop.i
+
+# target to preprocess a source file
+shop.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/inventory.dir/build.make CMakeFiles/inventory.dir/shop.cpp.i
+.PHONY : shop.cpp.i
+
+shop.s: shop.cpp.s
+.PHONY : shop.s
+
+# target to generate assembly for a file
+shop.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/inventory.dir/build.make CMakeFiles/inventory.dir/shop.cpp.s
+.PHONY : shop.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -382,9 +382,6 @@ help:
 	@echo "... ItemGenerator.o"
 	@echo "... ItemGenerator.i"
 	@echo "... ItemGenerator.s"
-	@echo "... Shop.o"
-	@echo "... Shop.i"
-	@echo "... Shop.s"
 	@echo "... game.o"
 	@echo "... game.i"
 	@echo "... game.s"
@@ -403,6 +400,9 @@ help:
 	@echo "... servant.o"
 	@echo "... servant.i"
 	@echo "... servant.s"
+	@echo "... shop.o"
+	@echo "... shop.i"
+	@echo "... shop.s"
 .PHONY : help
 
 

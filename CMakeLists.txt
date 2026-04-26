@@ -19,8 +19,8 @@ add_executable(inventory
         singleCharacter.h
         ItemGenerator.cpp
         ItemGenerator.h
-        Shop.cpp
-        Shop.h
+        shop.cpp
+        shop.h
 )
 
 include(GNUInstallDirs)
