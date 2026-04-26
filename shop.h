@@ -22,6 +22,8 @@ private:
     bool typeFilterEnabled;
     ItemType typeFilter;
 
+    void printShopRow(int actualIdx, bool selected) const;
+
 public:
     Shop();
     ~Shop();
