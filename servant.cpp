@@ -1,6 +1,7 @@
 #include "servant.h"
 #include <iostream>
 #include <cstdlib>
+#include <algorithm>
 
 // ─────────────────────────────────────────────
 // ANSI colors
@@ -56,6 +57,8 @@
 
 Servant::Servant()
     : name("Unnamed"),
+      masterName("Unknown"),
+      description(""),
       series(Series::StayNight),
       maxHP(100),
       currentHP(100),
@@ -64,18 +67,24 @@ Servant::Servant()
       agility(10),
       noblePhantasms(),
       npUsedThisBattle(),
-      asciiArt("[Servant]")
+      asciiArt("[Servant]"),
+      mirroredArt("[Servant]")
 {}
 
 Servant::Servant(const std::string& name,
+                 const std::string& masterName,
+                 const std::string& description,
                  Series series,
                  int maxHP,
                  int strength,
                  int durability,
                  int agility,
                  const std::vector<NoblePhantasm>& nps,
-                 const std::string& art)
+                 const std::string& art,
+                 const std::string& mirroredArt)
     : name(name),
+      masterName(masterName),
+      description(description),
       series(series),
       maxHP(maxHP),
       currentHP(maxHP),
@@ -84,7 +93,8 @@ Servant::Servant(const std::string& name,
       agility(agility),
       noblePhantasms(nps),
       npUsedThisBattle(nps.size(), false),
-      asciiArt(art)
+      asciiArt(art),
+      mirroredArt(mirroredArt)
 {}
 
 // ─────────────────────────────────────────────
@@ -138,6 +148,30 @@ void Servant::renderAscii() const {
 }
 
 // ─────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────
+
+static std::string mirrorAscii(const std::string& art) {
+    std::string result;
+    std::string line;
+    for (char c : art) {
+        if (c == '\n') {
+            std::reverse(line.begin(), line.end());
+            result += line;
+            result += '\n';
+            line.clear();
+        } else {
+            line += c;
+        }
+    }
+    if (!line.empty()) {
+        std::reverse(line.begin(), line.end());
+        result += line;
+    }
+    return result;
+}
+
+// ─────────────────────────────────────────────
 // Fate/stay night servants
 // ─────────────────────────────────────────────
 
@@ -164,8 +198,15 @@ static Servant makeSaberArtoriaStayNight() {
         GOLD          "                " BRIGHT_YELLOW "||\n"
         RESET;
 
-    return Servant("Saber (Artoria)", Series::StayNight,
-                   160, 26, 20, 18, nps, art);
+    std::string mirrored = mirrorAscii(art);
+
+    return Servant(
+        "Saber (Artoria)",
+        "Artoria Pendragon",
+        "Knightly king wielding the holy sword Excalibur.",
+        Series::StayNight,
+        160, 26, 20, 18, nps, art, mirrored
+    );
 }
 
 static Servant makeArcherEmiya() {
@@ -189,8 +230,15 @@ static Servant makeArcherEmiya() {
         BRIGHT_RED   "             /_/    \\_\\\n"
         RESET;
 
-    return Servant("Archer (Emiya)", Series::StayNight,
-                   145, 24, 17, 23, nps, art);
+    std::string mirrored = mirrorAscii(art);
+
+    return Servant(
+        "Archer (Emiya)",
+        "Emiya Shirou",
+        "Counter guardian of infinite steel.",
+        Series::StayNight,
+        145, 24, 17, 23, nps, art, mirrored
+    );
 }
 
 static Servant makeLancerCu() {
@@ -213,8 +261,15 @@ static Servant makeLancerCu() {
         BLOOD_RED    "                 /______" BRIGHT_RED "||" BLOOD_RED "______\\\n"
         RESET;
 
-    return Servant("Lancer (Cu Chulainn)", Series::StayNight,
-                   150, 23, 16, 25, nps, art);
+    std::string mirrored = mirrorAscii(art);
+
+    return Servant(
+        "Lancer (Cu Chulainn)",
+        "Cu Chulainn",
+        "Hound of Ulster bearing the cursed spear Gae Bolg.",
+        Series::StayNight,
+        150, 23, 16, 25, nps, art, mirrored
+    );
 }
 
 static Servant makeRiderMedusa() {
@@ -240,8 +295,15 @@ static Servant makeRiderMedusa() {
         LAVENDER      "              /___/" PURPLE "||" LAVENDER "\\___\\\n"
         RESET;
 
-    return Servant("Rider (Medusa)", Series::StayNight,
-                   140, 22, 15, 24, nps, art);
+    std::string mirrored = mirrorAscii(art);
+
+    return Servant(
+        "Rider (Medusa)",
+        "Medusa",
+        "Gorgon sister mounted upon the winged steed.",
+        Series::StayNight,
+        140, 22, 15, 24, nps, art, mirrored
+    );
 }
 
 static Servant makeBerserkerHeracles() {
@@ -265,8 +327,15 @@ static Servant makeBerserkerHeracles() {
         STEEL         "           /__/ /_____\\" " \\__\\\n"
         RESET;
 
-    return Servant("Berserker (Heracles)", Series::StayNight,
-                   210, 30, 22, 13, nps, art);
+    std::string mirrored = mirrorAscii(art);
+
+    return Servant(
+        "Berserker (Heracles)",
+        "Illyasviel von Einzbern",
+        "Mad warrior bearing countless lives.",
+        Series::StayNight,
+        210, 30, 22, 13, nps, art, mirrored
+    );
 }
 
 static Servant makeArcherGilgameshStayNight() {
@@ -289,8 +358,15 @@ static Servant makeArcherGilgameshStayNight() {
         GOLD          "                 /_/  \\_\\\n"
         RESET;
 
-    return Servant("Archer (Gilgamesh)", Series::StayNight,
-                   155, 27, 18, 20, nps, art);
+    std::string mirrored = mirrorAscii(art);
+
+    return Servant(
+        "Archer (Gilgamesh)",
+        "Gilgamesh",
+        "Golden king wielding a treasury of legends.",
+        Series::StayNight,
+        155, 27, 18, 20, nps, art, mirrored
+    );
 }
 
 static Servant makeAssassinSasaki() {
@@ -313,8 +389,15 @@ static Servant makeAssassinSasaki() {
         LAVENDER      "                 /____\\\n"
         RESET;
 
-    return Servant("Assassin (Sasaki)", Series::StayNight,
-                   135, 22, 14, 26, nps, art);
+    std::string mirrored = mirrorAscii(art);
+
+    return Servant(
+        "Assassin (Sasaki)",
+        "Kojirou Sasaki",
+        "Nameless swordsman who slashes beyond space.",
+        Series::StayNight,
+        135, 22, 14, 26, nps, art, mirrored
+    );
 }
 
 static Servant makeCasterMedea() {
@@ -337,8 +420,15 @@ static Servant makeCasterMedea() {
         DEEP_PURPLE   "               |/________\\|\n"
         RESET;
 
-    return Servant("Caster (Medea)", Series::StayNight,
-                   135, 20, 15, 18, nps, art);
+    std::string mirrored = mirrorAscii(art);
+
+    return Servant(
+        "Caster (Medea)",
+        "Medea",
+        "Witch of betrayal wielding ancient magecraft.",
+        Series::StayNight,
+        135, 20, 15, 18, nps, art, mirrored
+    );
 }
 
 static Servant makeAssassinHassanStayNight() {
@@ -360,8 +450,15 @@ static Servant makeAssassinHassanStayNight() {
         BRIGHT_BLACK  "          /__/     " ASH "||" BRIGHT_BLACK "     \\__\\\n"
         RESET;
 
-    return Servant("Assassin (Hassan)", Series::StayNight,
-                   135, 21, 15, 24, nps, art);
+    std::string mirrored = mirrorAscii(art);
+
+    return Servant(
+        "Assassin (Hassan)",
+        "Hassan-i Sabbah",
+        "Old man of the mountain, silent killer.",
+        Series::StayNight,
+        135, 21, 15, 24, nps, art, mirrored
+    );
 }
 
 // ─────────────────────────────────────────────
@@ -389,8 +486,15 @@ static Servant makeSaberArtoriaZero() {
         SILVER        "           /_/______/\\______\\_\\\n"
         RESET;
 
-    return Servant("Saber (Artoria Zero)", Series::Zero,
-                   165, 27, 21, 19, nps, art);
+    std::string mirrored = mirrorAscii(art);
+
+    return Servant(
+        "Saber (Artoria Zero)",
+        "Artoria Pendragon",
+        "King in a different era of the Grail War.",
+        Series::Zero,
+        165, 27, 21, 19, nps, art, mirrored
+    );
 }
 
 static Servant makeArcherGilgameshZero() {
@@ -412,8 +516,15 @@ static Servant makeArcherGilgameshZero() {
         GOLD          "               |__" DARK_GOLD "_||_" GOLD "__|\n"
         RESET;
 
-    return Servant("Archer (Gilgamesh Zero)", Series::Zero,
-                   160, 29, 19, 21, nps, art);
+    std::string mirrored = mirrorAscii(art);
+
+    return Servant(
+        "Archer (Gilgamesh Zero)",
+        "Gilgamesh",
+        "Golden king summoned in the Fourth War.",
+        Series::Zero,
+        160, 29, 19, 21, nps, art, mirrored
+    );
 }
 
 static Servant makeRiderIskandar() {
@@ -434,8 +545,15 @@ static Servant makeRiderIskandar() {
         DARK_GOLD     "               /___||___\\\n"
         RESET;
 
-    return Servant("Rider (Iskandar)", Series::Zero,
-                   190, 28, 21, 14, nps, art);
+    std::string mirrored = mirrorAscii(art);
+
+    return Servant(
+        "Rider (Iskandar)",
+        "Iskandar",
+        "Conquering king charging with his companions.",
+        Series::Zero,
+        190, 28, 21, 14, nps, art, mirrored
+    );
 }
 
 static Servant makeCasterGilles() {
@@ -456,8 +574,15 @@ static Servant makeCasterGilles() {
         DEEP_PURPLE   "              |/________\\|\n"
         RESET;
 
-    return Servant("Caster (Gilles)", Series::Zero,
-                   145, 21, 16, 17, nps, art);
+    std::string mirrored = mirrorAscii(art);
+
+    return Servant(
+        "Caster (Gilles)",
+        "Gilles de Rais",
+        "Mad caster invoking a sea of horrors.",
+        Series::Zero,
+        145, 21, 16, 17, nps, art, mirrored
+    );
 }
 
 static Servant makeLancerDiarmuid() {
@@ -477,8 +602,15 @@ static Servant makeLancerDiarmuid() {
         YELLOW        "                  ||========>\n"
         RESET;
 
-    return Servant("Lancer (Diarmuid)", Series::Zero,
-                   150, 24, 17, 24, nps, art);
+    std::string mirrored = mirrorAscii(art);
+
+    return Servant(
+        "Lancer (Diarmuid)",
+        "Diarmuid Ua Duibhne",
+        "Knight of the love spot, bearing twin spears.",
+        Series::Zero,
+        150, 24, 17, 24, nps, art, mirrored
+    );
 }
 
 static Servant makeBerserkerLancelot() {
@@ -499,8 +631,15 @@ static Servant makeBerserkerLancelot() {
         BRIGHT_BLACK  "                 /_/ \\_\\\n"
         RESET;
 
-    return Servant("Berserker (Lancelot)", Series::Zero,
-                   185, 27, 20, 18, nps, art);
+    std::string mirrored = mirrorAscii(art);
+
+    return Servant(
+        "Berserker (Lancelot)",
+        "Lancelot du Lac",
+        "Knight consumed by blackened madness.",
+        Series::Zero,
+        185, 27, 20, 18, nps, art, mirrored
+    );
 }
 
 static Servant makeAssassinHassanZero() {
@@ -521,17 +660,23 @@ static Servant makeAssassinHassanZero() {
         BRIGHT_BLACK  "                 /_/ \\_\\\n"
         RESET;
 
-    return Servant("Assassin (Hassan Zero)", Series::Zero,
-                   140, 22, 15, 25, nps, art);
+    std::string mirrored = mirrorAscii(art);
+
+    return Servant(
+        "Assassin (Hassan Zero)",
+        "Hassan-i Sabbah",
+        "Hundred-faced assassin unleashed in a prior war.",
+        Series::Zero,
+        140, 22, 15, 25, nps, art, mirrored
+    );
 }
 
 // ─────────────────────────────────────────────
-// Factories
+// Factories & selectors
 // ─────────────────────────────────────────────
 
 Servant Servant::randomServant() {
     std::vector<Servant> all;
-
     all.push_back(makeSaberArtoriaStayNight());
     all.push_back(makeArcherEmiya());
     all.push_back(makeLancerCu());
@@ -541,7 +686,6 @@ Servant Servant::randomServant() {
     all.push_back(makeAssassinSasaki());
     all.push_back(makeCasterMedea());
     all.push_back(makeAssassinHassanStayNight());
-
     all.push_back(makeSaberArtoriaZero());
     all.push_back(makeArcherGilgameshZero());
     all.push_back(makeRiderIskandar());
@@ -555,44 +699,58 @@ Servant Servant::randomServant() {
     return all[idx];
 }
 
+std::vector<Servant> Servant::allServants() {
+    std::vector<Servant> all;
+    all.push_back(makeSaberArtoriaStayNight());
+    all.push_back(makeArcherEmiya());
+    all.push_back(makeLancerCu());
+    all.push_back(makeRiderMedusa());
+    all.push_back(makeBerserkerHeracles());
+    all.push_back(makeArcherGilgameshStayNight());
+    all.push_back(makeAssassinSasaki());
+    all.push_back(makeCasterMedea());
+    all.push_back(makeAssassinHassanStayNight());
+    all.push_back(makeSaberArtoriaZero());
+    all.push_back(makeArcherGilgameshZero());
+    all.push_back(makeRiderIskandar());
+    all.push_back(makeCasterGilles());
+    all.push_back(makeLancerDiarmuid());
+    all.push_back(makeBerserkerLancelot());
+    all.push_back(makeAssassinHassanZero());
+    return all;
+}
+
+Servant Servant::randomServantForSeries(Series s) {
+    auto all = allServants();
+    std::vector<Servant> pool;
+    for (auto& sv : all) {
+        if (sv.getSeries() == s) pool.push_back(sv);
+    }
+    if (pool.empty()) return randomServant();
+    int idx = std::rand() % pool.size();
+    return pool[idx];
+}
+
+Servant Servant::selectServantForMaster(const std::string& masterInput, Series s) {
+    auto all = allServants();
+    std::string lower;
+    for (char c : masterInput) lower += std::tolower(static_cast<unsigned char>(c));
+
+    for (auto& sv : all) {
+        if (sv.getSeries() != s) continue;
+        std::string m = sv.getMasterName();
+        std::string mLower;
+        for (char c : m) mLower += std::tolower(static_cast<unsigned char>(c));
+        if (mLower == lower) return sv;
+    }
+    return randomServantForSeries(s);
+}
+
 std::vector<Servant> Servant::enemyPoolForSeries(Series s) {
     std::vector<Servant> pool;
-
-    Servant sSaberSN   = makeSaberArtoriaStayNight();
-    Servant sArcherE   = makeArcherEmiya();
-    Servant sLancerCu  = makeLancerCu();
-    Servant sRiderMed  = makeRiderMedusa();
-    Servant sBersHer   = makeBerserkerHeracles();
-    Servant sArcherGil = makeArcherGilgameshStayNight();
-    Servant sAssSasa   = makeAssassinSasaki();
-    Servant sCasterMed = makeCasterMedea();
-    Servant sAssHasSN  = makeAssassinHassanStayNight();
-
-    Servant zSaber     = makeSaberArtoriaZero();
-    Servant zArcherGil = makeArcherGilgameshZero();
-    Servant zRider     = makeRiderIskandar();
-    Servant zCaster    = makeCasterGilles();
-    Servant zLancer    = makeLancerDiarmuid();
-    Servant zBers      = makeBerserkerLancelot();
-    Servant zAss       = makeAssassinHassanZero();
-
-    if (sSaberSN.getSeries()   == s) pool.push_back(sSaberSN);
-    if (sArcherE.getSeries()   == s) pool.push_back(sArcherE);
-    if (sLancerCu.getSeries()  == s) pool.push_back(sLancerCu);
-    if (sRiderMed.getSeries()  == s) pool.push_back(sRiderMed);
-    if (sBersHer.getSeries()   == s) pool.push_back(sBersHer);
-    if (sArcherGil.getSeries() == s) pool.push_back(sArcherGil);
-    if (sAssSasa.getSeries()   == s) pool.push_back(sAssSasa);
-    if (sCasterMed.getSeries() == s) pool.push_back(sCasterMed);
-    if (sAssHasSN.getSeries()  == s) pool.push_back(sAssHasSN);
-
-    if (zSaber.getSeries()     == s) pool.push_back(zSaber);
-    if (zArcherGil.getSeries() == s) pool.push_back(zArcherGil);
-    if (zRider.getSeries()     == s) pool.push_back(zRider);
-    if (zCaster.getSeries()    == s) pool.push_back(zCaster);
-    if (zLancer.getSeries()    == s) pool.push_back(zLancer);
-    if (zBers.getSeries()      == s) pool.push_back(zBers);
-    if (zAss.getSeries()       == s) pool.push_back(zAss);
-
+    auto all = allServants();
+    for (auto& sv : all) {
+        if (sv.getSeries() == s) pool.push_back(sv);
+    }
     return pool;
 }
