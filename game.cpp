@@ -13,6 +13,48 @@ using std::endl;
 using std::string;
 using std::vector;
 
+// ANSI colour shorthands used throughout UI
+#define C_RESET     "\033[0m"
+#define C_GOLD      "\033[38;5;220m"
+#define C_DGOLD     "\033[38;5;178m"
+#define C_LGOLD     "\033[38;5;229m"
+#define C_SILVER    "\033[38;5;250m"
+#define C_WHITE     "\033[97m"
+#define C_DIM       "\033[38;5;240m"
+#define C_CYAN      "\033[96m"
+#define C_BLUE      "\033[38;5;39m"
+#define C_RED       "\033[38;5;160m"
+#define C_BRED      "\033[91m"
+#define C_GREEN     "\033[92m"
+#define C_MGENTA    "\033[38;5;141m"
+#define C_PURPLE    "\033[38;5;129m"
+#define C_ORANGE    "\033[38;5;214m"
+
+// Box-drawing
+#define BD_H  "\u2500"
+#define BD_V  "\u2502"
+#define BD_TL "\u250c"
+#define BD_TR "\u2510"
+#define BD_BL "\u2514"
+#define BD_BR "\u2518"
+#define BD_LT "\u251c"
+#define BD_RT "\u2524"
+#define BD_TT "\u252c"
+#define BD_BT "\u2534"
+#define BD_CR "\u253c"
+
+// Double box-drawing
+#define BD_DH  "\u2550"
+#define BD_DV  "\u2551"
+#define BD_DTL "\u2554"
+#define BD_DTR "\u2557"
+#define BD_DBL "\u255a"
+#define BD_DBR "\u255d"
+#define BD_DLT "\u2560"
+#define BD_DRT "\u2563"
+#define BD_DTT "\u2566"
+#define BD_DBT "\u2569"
+
 // =============================================================================
 // File-scope helpers for side-by-side terminal rendering
 // =============================================================================
@@ -22,7 +64,11 @@ static int visibleLen(const std::string& s) {
     for (char c : s) {
         if (c == '\033')        esc = true;
         else if (esc && c=='m') esc = false;
-        else if (!esc)          ++len;
+        else if (!esc) {
+            // Count UTF-8 multibyte start bytes as 1 visible char each;
+            // continuation bytes (10xxxxxx) are skipped
+            if ((unsigned char)c < 0x80 || (unsigned char)c >= 0xC0) ++len;
+        }
     }
     return len;
 }
@@ -41,6 +87,30 @@ static std::vector<std::string> splitLines(const std::string& s) {
     }
     if (!cur.empty()) lines.push_back(cur);
     return lines;
+}
+
+// Repeat a string n times
+static std::string rep(const std::string& s, int n) {
+    std::string out; for (int i = 0; i < n; i++) out += s; return out;
+}
+
+// FGO-style horizontal rule: ── TITLE ──────────────
+static std::string fgoRule(const std::string& title, int totalW, const std::string& col) {
+    int tv = visibleLen(title);
+    int sides = totalW - tv - 2; // 1 space each side
+    int left  = sides / 2;
+    int right = sides - left;
+    return col + rep(BD_H, left) + " " + C_WHITE + title + col + " " + rep(BD_H, right) + C_RESET;
+}
+
+// FGO stat rank bar (A/B/C/D/E style with filled pips)
+static std::string rankBar(int val, int maxVal, int pips) {
+    int filled = (maxVal > 0) ? (val * pips / maxVal) : 0;
+    std::string bar = C_GOLD;
+    for (int i = 0; i < pips; i++)
+        bar += (i < filled) ? "\u25a0" : (C_DIM "\u25a1" C_GOLD);
+    bar += C_RESET;
+    return bar;
 }
 
 // =============================================================================
@@ -92,7 +162,7 @@ void Game::generateRandomInventory() {
 }
 
 // =============================================================================
-// Main Menu
+// Main Menu  —  FGO command-room style
 // =============================================================================
 
 void Game::showMainMenu() {
@@ -100,27 +170,43 @@ void Game::showMainMenu() {
     const int OPTIONS = 4;
     while (true) {
         printf("\033[2J"); printf("\033[H"); fflush(stdout);
-        cout << "╔═════════════════════════════╗" << endl;
-        cout << "║  SERVANT BATTLE ROYALE      ║" << endl;
-        cout << "╠═════════════════════════════╣" << endl;
-        cout << "║                             ║" << endl;
+
+        // Header
+        cout << C_GOLD BD_DTL << rep(BD_DH, 31) << BD_DTR C_RESET << "\n";
+        cout << C_GOLD BD_DV C_LGOLD "  ⚔  HOLY GRAIL WAR  •  MASTER HQ  "
+             << C_GOLD BD_DV C_RESET << "\n";
+        cout << C_GOLD BD_DLT << rep(BD_DH, 31) << BD_DRT C_RESET << "\n";
+
+        // Menu entries
         const char* labels[OPTIONS] = {
-            " Inventory   ", " Shop        ", " Battle Arena", " Quit        "
+            "  Inventory", "  Shop     ", "  Battle   ", "  Quit     "
         };
+        const char* icons[OPTIONS]  = { "\u2696", "\u2741", "\u2694", "\u00d7" };
+        const char* cols[OPTIONS]   = { C_CYAN, C_GOLD, C_BRED, C_DIM };
         for (int i = 0; i < OPTIONS; i++) {
-            if (i == sel) cout << "║  > " << labels[i];
-            else          cout << "║    " << labels[i];
-            int used = 5 + (int)string(labels[i]).size();
+            bool active = (i == sel);
+            std::string prefix = active
+                ? (std::string(C_GOLD) + BD_DV + C_GOLD + "  \u25b6 ")
+                : (std::string(C_GOLD) + BD_DV + C_DIM  + "    ");
+            cout << prefix
+                 << cols[i] << icons[i] << "  "
+                 << (active ? C_WHITE : C_DIM)
+                 << labels[i];
+            // pad
+            int used = 8 + (int)string(labels[i]).size();
             for (int s = used; s < 30; s++) cout << ' ';
-            cout << " ║" << endl;
+            cout << C_GOLD << BD_DV << C_RESET << "\n";
         }
-        cout << "║                             ║" << endl;
-        cout << "║  Gold: " << shop->getPlayerGold() << "g";
-        int goldLen = (int)std::to_string(shop->getPlayerGold()).size();
-        for (int p = 0; p < 18 - goldLen; p++) cout << ' ';
-        cout << "║" << endl;
-        cout << "╚═════════════════════════════╝" << endl;
-        cout << "W/S - navigate | Enter - select | ESC - quit" << endl;
+
+        // Footer
+        cout << C_GOLD BD_DLT << rep(BD_DH, 31) << BD_DRT C_RESET << "\n";
+        cout << C_GOLD BD_DV C_DIM " Gold: " C_GOLD
+             << shop->getPlayerGold() << "g";
+        int gl = (int)std::to_string(shop->getPlayerGold()).size() + 7;
+        for (int i = gl; i < 30; i++) cout << ' ';
+        cout << C_GOLD BD_DV C_RESET << "\n";
+        cout << C_GOLD BD_DBL << rep(BD_DH, 31) << BD_DBR C_RESET << "\n";
+        cout << C_DIM "  W/S navigate  " BD_V "  Enter select  " BD_V "  Esc quit" C_RESET << "\n";
 
         int key = (int)getSingleChar();
         switch (key) {
@@ -146,9 +232,9 @@ void Game::playSearchMenu() {
     string query;
     while (true) {
         printf("\033[2J"); printf("\033[H"); fflush(stdout);
-        cout << "=== SHOP SEARCH ===" << endl;
-        cout << "Type item name, Enter to confirm, Backspace to delete, ESC to cancel" << endl;
-        cout << endl << "Search: " << query << "_" << endl;
+        cout << C_GOLD << fgoRule("SHOP SEARCH", 44, C_DGOLD) << C_RESET << "\n\n";
+        cout << C_DIM "Type item name  " BD_V "  Enter confirm  " BD_V "  Esc cancel" C_RESET "\n\n";
+        cout << C_WHITE "  Search: " C_CYAN << query << C_DIM "_" C_RESET << "\n";
         int key = (int)getSingleChar();
         if      (key == 10 || key == 13)  { shop->setSearchQuery(query); return; }
         else if (key == 27)               { return; }
@@ -167,37 +253,44 @@ void Game::showSellConfirmScreen(Item* item, int row, int col) {
     int sellPrice = (item->getPrice() * pct) / 100;
     while (true) {
         printf("\033[2J"); printf("\033[H"); fflush(stdout);
-        cout << "╔══════════════════════════════════════════════╗" << endl;
-        cout << "║                  SELL ITEM?                  ║" << endl;
-        cout << "╠══════════════════════════════════════════════╣" << endl;
-        cout << "║                                              ║" << endl;
 
-        auto printRow = [](const string& label, const string& val) {
-            string line = "║  " + label + val;
-            int used = 4 + (int)label.size() + (int)val.size();
-            for (int i = used; i < 46; i++) cout << ' ';
-            cout << "║" << endl;
+        cout << C_DGOLD BD_DTL << rep(BD_DH, 46) << BD_DTR C_RESET << "\n";
+        cout << C_DGOLD BD_DV C_GOLD "            ❁  SELL ITEM?  ❁            "
+             << C_DGOLD BD_DV C_RESET << "\n";
+        cout << C_DGOLD BD_DLT << rep(BD_DH, 46) << BD_DRT C_RESET << "\n";
+
+        auto printRow = [](const string& lbl, const string& val, const string& vc) {
+            cout << C_DGOLD BD_DV C_DIM "  " C_SILVER << lbl
+                 << vc << val;
+            int used = 4 + (int)lbl.size() + (int)val.size();
+            for (int i = used; i < 45; i++) cout << ' ';
+            cout << C_DGOLD BD_DV C_RESET << "\n";
         };
 
-        printRow("Item:   ", item->getName());
-        printRow("Type:   ", Item::typeToString(item->getType()));
-        printRow("Worth:  ", std::to_string(item->getPrice()) + "g");
-        printRow("Sell:   ", std::to_string(sellPrice) + "g (" + std::to_string(pct) + "%)");
+        printRow("Item:   ", item->getName(),                        C_WHITE);
+        printRow("Type:   ", Item::typeToString(item->getType()),    C_CYAN);
+        printRow("Worth:  ", std::to_string(item->getPrice()) + "g", C_GOLD);
+        printRow("Sell:   ", std::to_string(sellPrice) + "g (" +
+                             std::to_string(pct) + "%)",             C_GREEN);
 
-        cout << "║                                              ║" << endl;
-        cout << "╠══════════════════════════════════════════════╣" << endl;
-        cout << "║      Y - Confirm sell  |  N / ESC - Cancel   ║" << endl;
-        cout << "╚══════════════════════════════════════════════╝" << endl;
+        cout << C_DGOLD BD_DLT << rep(BD_DH, 46) << BD_DRT C_RESET << "\n";
+        cout << C_DGOLD BD_DV C_DIM
+             "     " C_GREEN "Y" C_DIM " - Confirm sell   "
+             BD_V "   " C_RED "N / Esc" C_DIM " - Cancel    "
+             << C_DGOLD BD_DV C_RESET << "\n";
+        cout << C_DGOLD BD_DBL << rep(BD_DH, 46) << BD_DBR C_RESET << "\n";
 
         int key = (int)getSingleChar();
         if (key == 'y' || key == 'Y') {
             player->getInventory()->setItemAt(row, col, nullptr);
             shop->addGold(sellPrice);
             printf("\033[2J"); printf("\033[H"); fflush(stdout);
-            cout << "Sold " << item->getName() << " for " << sellPrice
-                 << "g (" << pct << "%)!" << endl;
-            cout << "Gold: " << shop->getPlayerGold() << "g" << endl;
-            cout << "Press any key..." << endl;
+            cout << C_GREEN "  Sold " C_WHITE << item->getName()
+                 << C_GREEN " for " C_GOLD << sellPrice
+                 << "g" C_DIM " (" << pct << "%)" C_RESET << "\n";
+            cout << C_DIM "  Treasury: " C_GOLD << shop->getPlayerGold()
+                 << "g" C_RESET << "\n\n";
+            cout << C_DIM "  Press any key..." C_RESET << "\n";
             delete item;
             getSingleChar();
             return;
@@ -222,28 +315,35 @@ void Game::placeItemMenu(Item* item) {
 
     while (true) {
         printf("\033[2J"); printf("\033[H"); fflush(stdout);
-        cout << "Holding: " << item->getName()
-             << " [" << item->getPrice() << "g | "
-             << Item::rarityToString(item->getRarity()) << " | "
-             << Item::typeToString(item->getType()) << "]" << endl << endl;
+        cout << C_GOLD "  Holding: " C_WHITE << item->getName()
+             << C_DIM "  [" C_GOLD << item->getPrice() << "g"
+             << C_DIM " | " C_CYAN << Item::rarityToString(item->getRarity())
+             << C_DIM " | " C_SILVER << Item::typeToString(item->getType())
+             << C_DIM "]" C_RESET << "\n\n";
 
         for (int i = 0; i < BAG_R; i++) {
+            cout << "  ";
             for (int j = 0; j < BAG_C; j++) {
                 bool  isCursor = (i == curRow && j == curCol);
                 Item* slot     = inv->getItemAt(i, j);
-                cout << (isCursor ? "<" : "[");
-                if (isCursor)   cout << itemTag;
+                cout << (isCursor ? C_GOLD "<" : C_DIM "[");
+                if (isCursor)   cout << C_WHITE << itemTag;
                 else if (!slot) cout << "   ";
                 else            cout << inv->getItemDisplayStr(i, j);
-                cout << (isCursor ? "> " : "] ");
+                cout << (isCursor ? ">" : "]") << C_RESET " ";
             }
-            cout << endl;
+            cout << "\n";
         }
-        cout << endl;
+        cout << "\n";
 
         Item* curSlot = inv->getItemAt(curRow, curCol);
-        if (!curSlot) cout << "[EMPTY] Enter-Place | ESC-Auto-place | Q-Cancel buy" << endl;
-        else          cout << "[" << curSlot->getName() << "] Occupied! | Q-Cancel buy" << endl;
+        if (!curSlot)
+            cout << C_DIM "  [EMPTY] " C_GREEN "Enter" C_DIM "-Place  "
+                    C_SILVER "Esc" C_DIM "-Auto  "
+                    C_RED "Q" C_DIM "-Cancel" C_RESET "\n";
+        else
+            cout << C_RED "  [" C_WHITE << curSlot->getName()
+                 << C_RED "] Occupied  " C_RED "Q" C_DIM "-Cancel" C_RESET "\n";
 
         int key = (int)getSingleChar();
         switch (key) {
@@ -259,7 +359,7 @@ void Game::placeItemMenu(Item* item) {
                 if (!inv->getItemAt(curRow, curCol)) {
                     inv->setItemAt(curRow, curCol, item); return;
                 } else {
-                    cout << "\nSlot occupied!\nPress any key..." << endl;
+                    cout << C_RED "\n  Slot occupied!" C_RESET "\n  Press any key...\n";
                     getSingleChar();
                 }
                 break;
@@ -267,7 +367,7 @@ void Game::placeItemMenu(Item* item) {
                 if (!inv->addItemAtRandomPosition(item)) {
                     shop->addGold(item->getPrice());
                     shop->addItemToShop(item);
-                    cout << "\nInventory full! Purchase refunded.\nPress any key..." << endl;
+                    cout << C_RED "\n  Inventory full! Purchase refunded." C_RESET "\n  Press any key...\n";
                     getSingleChar();
                 }
                 return;
@@ -282,7 +382,8 @@ void Game::placeItemMenu(Item* item) {
 
 void Game::playShop() {
     int userInput = 0;
-    cout << "\n=== Welcome to the Shop! ===\nPress any key to continue..." << endl;
+    cout << C_GOLD "\n  ❁  Welcome to the Shop, Master!  ❁" C_RESET "\n";
+    cout << C_DIM "  Press any key to continue..." C_RESET "\n";
     getSingleChar();
 
     while (userInput != 'e' && userInput != 'E') {
@@ -291,9 +392,9 @@ void Game::playShop() {
                    shop->isRarityFilterEnabled()   ||
                    shop->isTypeFilterEnabled();
         if (fv) shop->displayShopWithSearch(); else shop->displayShop();
-        cout << endl;
-        cout << "1-Common 2-Magic 3-Rare  4-Potion 5-Sword 6-Armor 7-Movement 0-Clear" << endl;
-        cout << "F-Search  R-Restock  V-Sell items  E-Exit" << endl;
+        cout << "\n";
+        cout << C_DIM "  1-Common  2-Magic  3-Rare  4-Potion  5-Sword  6-Armor  7-Move  0-Clear\n";
+        cout << "  F-Search  R-Restock  V-Sell  B-Buy  W/S-Navigate  E-Exit" C_RESET "\n";
 
         userInput = (int)getSingleChar();
         switch (userInput) {
@@ -310,10 +411,10 @@ void Game::playShop() {
                 Item* si  = shop->getSelectedItem();
                 if (si) {
                     if (shop->getPlayerGold() < si->getPrice()) {
-                        cout << "\nNot enough gold!\nPress any key..." << endl;
+                        cout << C_RED "\n  Not enough gold!" C_RESET "\n  Press any key...\n";
                         getSingleChar();
                     } else if (player->getInventory()->getEmptySlotCount() == 0) {
-                        cout << "\nInventory is full!\nPress any key..." << endl;
+                        cout << C_RED "\n  Inventory is full!" C_RESET "\n  Press any key...\n";
                         getSingleChar();
                     } else {
                         Item* bought = shop->buyItemNoPlace(idx);
@@ -325,7 +426,7 @@ void Game::playShop() {
             case 'f': case 'F': playSearchMenu(); break;
             case 'r': case 'R':
                 shop->restockShop();
-                cout << "\nShop restocked!\nPress any key..." << endl;
+                cout << C_GREEN "\n  Shop restocked!" C_RESET "\n  Press any key...\n";
                 getSingleChar();
                 break;
             case 'v': case 'V': sellItemsMenu(); break;
@@ -350,23 +451,23 @@ void Game::sellItemsMenu() {
     int userInput = 0;
     while (userInput != 'e' && userInput != 'E') {
         printf("\033[2J"); printf("\033[H"); fflush(stdout);
-        cout << "=== SELL ITEMS ===" << endl;
-        cout << "Your Gold: " << shop->getPlayerGold() << "g" << endl << endl;
+        cout << C_GOLD << fgoRule("SELL ITEMS", 38, C_DGOLD) << C_RESET << "\n";
+        cout << C_DIM "  Treasury: " C_GOLD << shop->getPlayerGold() << "g" C_RESET << "\n\n";
         player->getInventory()->display();
 
         Item* cur = player->getInventory()->getCurrentItem();
         if (cur)
-            cout << "\nSelected: " << cur->getName()
-                 << " | Sell value: "
+            cout << C_DIM "  Selected: " C_WHITE << cur->getName()
+                 << C_DIM "  Sell value: " C_GOLD
                  << (int)(cur->getPrice() * 0.80) << "-"
-                 << (int)(cur->getPrice() * 0.90) << "g" << endl;
+                 << (int)(cur->getPrice() * 0.90) << "g" C_RESET << "\n";
         else
-            cout << "\nNo item at cursor." << endl;
+            cout << C_DIM "  No item at cursor." C_RESET << "\n";
 
         if (player->getInventory()->getIsDragging())
-            cout << "\n[DRAGGING] G-Drop/Swap | K-Cancel | E-Exit" << endl;
+            cout << C_GOLD "  [DRAGGING] " C_DIM "G-Drop  K-Cancel  E-Exit" C_RESET << "\n";
         else
-            cout << "\nW/A/S/D-Navigate | H-Sell | G-Grab | K-Cancel drag | E-Exit" << endl;
+            cout << C_DIM "  W/A/S/D-Navigate  H-Sell  G-Grab  K-Cancel  E-Exit" C_RESET << "\n";
 
         userInput = (int)getSingleChar();
         switch (userInput) {
@@ -385,14 +486,14 @@ void Game::sellItemsMenu() {
             case 'k': case 'K': player->getInventory()->cancelDrag(); break;
             case 'h': case 'H': {
                 if (player->getInventory()->getIsDragging()) {
-                    cout << "\nCannot sell while dragging!\nPress any key..." << endl;
+                    cout << C_RED "\n  Cannot sell while dragging!" C_RESET "\n  Press any key...\n";
                     getSingleChar(); break;
                 }
                 Item* it = player->getInventory()->getCurrentItem();
                 if (it) showSellConfirmScreen(it,
                             player->getInventory()->getCurrentRow(),
                             player->getInventory()->getCurrentCol());
-                else { cout << "\nNo item to sell!\nPress any key..." << endl; getSingleChar(); }
+                else { cout << C_RED "\n  No item to sell!" C_RESET "\n  Press any key...\n"; getSingleChar(); }
                 break;
             }
             default: break;
@@ -401,99 +502,170 @@ void Game::sellItemsMenu() {
 }
 
 // =============================================================================
-// INVENTORY SCREEN  (redesigned: side-by-side layout)
+// INVENTORY SCREEN  —  FGO / Visual Novel Style
 // =============================================================================
+
+// Helper: render one NP card in the right panel
+static void pushNPCard(vector<string>& panel, std::size_t idx,
+                       const NoblePhantasm& np, bool available, int panelW) {
+    // Title line
+    std::string avail = available ? (C_GOLD "\u25cf READY") : (C_DIM "\u25cb USED");
+    panel.push_back(
+        C_DIM " " + std::string(BD_TL) + rep(BD_H, 3) + C_RESET +
+        " " C_LGOLD + np.name + C_RESET +
+        "  " + avail + C_RESET
+    );
+    // Stats line: Base DMG / Scale
+    panel.push_back(
+        C_DIM "  " + std::string(BD_V) + "  "
+        C_DIM "Dmg: " C_BRED + std::to_string(np.baseDamage) +
+        C_DIM "  Scale: " C_ORANGE + std::to_string((int)(np.damageScale * 10)) + "x" +
+        C_RESET
+    );
+    // Description — word-wrap to ~panelW - 5 chars
+    int wrapW = panelW - 5;
+    std::string desc = np.description;
+    while ((int)desc.size() > wrapW) {
+        int cut = wrapW;
+        while (cut > 0 && desc[cut] != ' ') cut--;
+        if (cut == 0) cut = wrapW;
+        panel.push_back(C_DIM "  " + std::string(BD_V) + "  " C_SILVER + desc.substr(0, cut) + C_RESET);
+        desc = desc.substr(cut + 1);
+    }
+    if (!desc.empty())
+        panel.push_back(C_DIM "  " + std::string(BD_V) + "  " C_SILVER + desc + C_RESET);
+    panel.push_back(C_DIM "  " + rep(BD_H, 28) + C_RESET);
+}
 
 void Game::play() {
     int  userInput    = 0;
     bool showItemInfo = false;
     bool showStats    = false;
-    const int LEFT_W  = 42;
+    const int LEFT_W  = 44;
 
     while (userInput != 127) {
         printf("\033[2J"); printf("\033[H"); fflush(stdout);
 
         Servant*   sv  = player->getServant();
         Inventory* inv = player->getInventory();
+        bool inEquip   = (inv->getCurrentCol() >= 3);
 
         // ── LEFT PANEL ──────────────────────────────────────────────────
         vector<string> left;
 
-        string goldStr = " \033[93mGold:\033[0m " +
-                         std::to_string(shop->getPlayerGold()) + "g";
-        string locStr  = (inv->getCurrentCol() >= 3)
-                         ? "  \033[93m[EQUIP]\033[0m"
-                         : "  \033[97m[BAG]\033[0m";
-        left.push_back(padRight(goldStr, LEFT_W / 2) + locStr);
+        // Header bar
+        left.push_back(
+            C_GOLD " ❁ " C_WHITE "INVENTORY" C_GOLD "  │  "
+            C_DIM "Gold: " C_GOLD + std::to_string(shop->getPlayerGold()) + "g"
+            + C_DIM "  │  "
+            + (inEquip ? C_GOLD "[EQUIP ZONE]" : C_SILVER "[BAG]") + C_RESET
+        );
+        left.push_back(C_DIM + rep(BD_H, LEFT_W) + C_RESET);
         left.push_back("");
 
+        // Bag + Equip grids
         auto bagLines   = inv->renderBagLines();
         auto equipLines = inv->renderEquipLines();
         int  gridRows   = (int)std::max(bagLines.size(), equipLines.size());
         for (int i = 0; i < gridRows; i++) {
-            string bl = (i < (int)bagLines.size())
-                        ? bagLines[i]  : string(21, ' ');
-            string el = (i < (int)equipLines.size())
-                        ? equipLines[i] : string(15, ' ');
-            left.push_back(padRight(bl, 23) + el);
+            string bl = (i < (int)bagLines.size())   ? bagLines[i]   : string(21, ' ');
+            string el = (i < (int)equipLines.size()) ? equipLines[i] : string(15, ' ');
+            left.push_back(padRight(bl, 25) + el);
         }
         left.push_back("");
 
+        // Item info panel
         Item* cur = inv->getCurrentItem();
         if (showItemInfo) {
+            left.push_back(C_DIM + rep(BD_H, LEFT_W) + C_RESET);
             if (cur) {
-                string rCol = (cur->getRarity() == rare)  ? "\033[93m"
-                            : (cur->getRarity() == magic) ? "\033[96m"
-                            : "\033[97m";
-                left.push_back(" " + rCol + cur->getName() + "\033[0m");
-                left.push_back(" Type:   " + Item::typeToString(cur->getType()));
-                left.push_back(" Rarity: " + Item::rarityToString(cur->getRarity()));
-                left.push_back(" Price:  " + std::to_string(cur->getPrice()) + "g");
-                left.push_back(" Effect: +" + std::to_string(cur->getPercentValue()) + "%");
+                const char* rCol = (cur->getRarity() == rare)  ? C_GOLD
+                                 : (cur->getRarity() == magic) ? C_CYAN
+                                 : C_WHITE;
+                left.push_back(string(" ") + rCol + cur->getName() + C_RESET);
+                left.push_back(C_DIM "  Type:   " C_SILVER + Item::typeToString(cur->getType()) + C_RESET);
+                left.push_back(C_DIM "  Rarity: " C_CYAN   + Item::rarityToString(cur->getRarity()) + C_RESET);
+                left.push_back(C_DIM "  Price:  " C_GOLD   + std::to_string(cur->getPrice()) + "g" + C_RESET);
+                left.push_back(C_DIM "  Effect: " C_GREEN  + "+" + std::to_string(cur->getPercentValue()) + "%" + C_RESET);
             } else {
-                left.push_back(" \033[90m[empty slot]\033[0m");
+                left.push_back(C_DIM "  [empty slot]" C_RESET);
             }
+        }
+
+        // Controls hint
+        left.push_back("");
+        left.push_back(C_DIM + rep(BD_H, LEFT_W) + C_RESET);
+        if (inv->getIsDragging()) {
+            left.push_back(C_GOLD " [DRAGGING] "
+                C_DIM "G" C_SILVER "-Drop  "
+                C_DIM "K" C_SILVER "-Cancel  "
+                C_DIM "Bksp" C_SILVER "-Menu" C_RESET);
+        } else {
+            left.push_back(
+                C_DIM " WASD" C_SILVER "-Move  "
+                C_DIM "G" C_SILVER "-Grab  "
+                C_DIM "T" C_SILVER + std::string(inEquip ? "-Unequip  " : "-Equip  ")
+                + C_DIM "I" C_SILVER "-Info" C_RESET);
+            left.push_back(
+                C_DIM " F" C_SILVER "-Stats  "
+                C_DIM "H" C_SILVER "-Sell  "
+                C_DIM "P" C_SILVER "-Shop  "
+                C_DIM "Bksp" C_SILVER "-Menu" C_RESET);
         }
 
         // ── RIGHT PANEL ─────────────────────────────────────────────────
         vector<string> right;
 
-        string seriesTag = (sv->getSeries() == Series::StayNight)
-                           ? "\033[34mFate/stay night\033[0m"
-                           : "\033[31mFate/Zero\033[0m";
-        right.push_back(" \033[93m" + sv->getName() + "\033[0m  " + seriesTag);
-        right.push_back(" \033[90m────────────────────────────\033[0m");
+        // Servant name + series badge
+        bool isZero = (sv->getSeries() == Series::Zero);
+        string seriesBadge = isZero
+            ? (C_RED "\u2605 Fate/Zero" C_RESET)
+            : (std::string(C_BLUE) + "\u2605 Fate/stay night" + C_RESET);
+        right.push_back(" " C_GOLD "\u2694  " C_WHITE + sv->getName() + C_RESET);
+        right.push_back("    " + seriesBadge);
+        right.push_back(" " C_DIM + rep(BD_H, 30) + C_RESET);
+        right.push_back("");
 
+        // ASCII art
         for (auto& al : splitLines(sv->getAsciiArt()))
             right.push_back(" " + al);
 
+        // Stats panel
         if (showStats) {
-            int bHP  = sv->getMaxHP(),      eHP  = player->getEffectiveMaxHP();
-            int bSTR = sv->getStrength(),    eSTR = player->getEffectiveStrength();
-            int bDUR = sv->getDurability(),  eDUR = player->getEffectiveDurability();
-            int bAGI = sv->getAgility(),     eAGI = player->getEffectiveAgility();
+            int bHP  = sv->getMaxHP(),     eHP  = player->getEffectiveMaxHP();
+            int bSTR = sv->getStrength(),   eSTR = player->getEffectiveStrength();
+            int bDUR = sv->getDurability(), eDUR = player->getEffectiveDurability();
+            int bAGI = sv->getAgility(),    eAGI = player->getEffectiveAgility();
 
-            auto statLine = [](const string& lbl, int base, int eff) -> string {
-                string s = " \033[97m" + lbl + "\033[0m " + std::to_string(base);
-                if (eff != base)
-                    s += " \033[92m(+" + std::to_string(eff - base) + ")\033[0m";
-                return s;
+            // Reference maxima for rank bars
+            const int MAX_HP  = 220;
+            const int MAX_STAT = 32;
+
+            auto statLine = [&](const string& lbl, int base, int eff, int maxV) -> string {
+                string bonus = (eff != base)
+                    ? (C_GREEN "  +" + std::to_string(eff - base) + C_RESET)
+                    : "";
+                return C_DIM " " + string(BD_V) + "  " C_SILVER + lbl + C_RESET
+                     + " " C_WHITE + std::to_string(base) + C_RESET
+                     + bonus + "  " + rankBar(eff, maxV, 8);
             };
 
-            right.push_back(" \033[90m────────────────────────────\033[0m");
-            right.push_back(" \033[96mBase Stats\033[0m");
-            right.push_back(statLine("HP: ", bHP,  eHP));
-            right.push_back(statLine("STR:", bSTR, eSTR));
-            right.push_back(statLine("DUR:", bDUR, eDUR));
-            right.push_back(statLine("AGI:", bAGI, eAGI));
+            right.push_back("");
+            right.push_back(" " C_DGOLD + fgoRule("STATUS", 30, C_DIM) + C_RESET);
+            right.push_back(C_DIM " " + rep(BD_H, 30) + C_RESET);
+            right.push_back(statLine("HP : ", bHP,  eHP,  MAX_HP));
+            right.push_back(statLine("STR: ", bSTR, eSTR, MAX_STAT));
+            right.push_back(statLine("DUR: ", bDUR, eDUR, MAX_STAT));
+            right.push_back(statLine("AGI: ", bAGI, eAGI, MAX_STAT));
 
+            // Noble Phantasm cards
             const auto& nps = sv->getNPs();
             if (!nps.empty()) {
                 right.push_back("");
-                right.push_back(" \033[96mNoble Phantasms\033[0m");
+                right.push_back(" " C_DGOLD + fgoRule("NOBLE PHANTASM", 30, C_DIM) + C_RESET);
                 for (std::size_t ni = 0; ni < nps.size(); ++ni) {
-                    string col = sv->isNPAvailable(ni) ? "\033[93m" : "\033[90m";
-                    right.push_back(" " + col + nps[ni].name + "\033[0m");
+                    right.push_back("");
+                    pushNPCard(right, ni, nps[ni], sv->isNPAvailable(ni), 30);
                 }
             }
         }
@@ -505,13 +677,6 @@ void Game::play() {
             string r = (i < (int)right.size()) ? right[i] : "";
             cout << padRight(l, LEFT_W) << r << "\n";
         }
-
-        cout << "\n";
-        if (inv->getIsDragging())
-            cout << " \033[93m[DRAGGING]\033[0m G-Drop/Swap  K-Cancel  Backspace-Menu\n";
-        else
-            cout << " W/A/S/D-Move  G-Grab  T-Equip  I-Info  "
-                    "F-Stats  H-Sell  P-Shop  Backspace-Menu\n";
 
         userInput = (int)getSingleChar();
         switch (userInput) {
@@ -531,17 +696,21 @@ void Game::play() {
                 inv->cancelDrag(); showItemInfo = false; break;
             case 'h': case 'H': {
                 if (inv->getIsDragging()) {
-                    cout << "\nCannot sell while dragging!\nPress any key...\n";
+                    cout << C_RED "\n Cannot sell while dragging!" C_RESET "\n Press any key...\n";
                     getSingleChar(); break;
                 }
                 Item* it = inv->getCurrentItem();
                 if (it) showSellConfirmScreen(it, inv->getCurrentRow(), inv->getCurrentCol());
-                else { cout << "\nNo item here!\nPress any key...\n"; getSingleChar(); }
+                else { cout << C_RED "\n No item here!" C_RESET "\n Press any key...\n"; getSingleChar(); }
                 showItemInfo = false; break;
             }
             case 't': case 'T':
                 if (!inv->equipItem()) {
-                    cout << "\nNo item here or equipment slots full!\nPress any key...\n";
+                    bool eq = (inv->getCurrentCol() >= 3);
+                    if (eq)
+                        cout << C_RED "\n No item to unequip, or bag is full!" C_RESET "\n Press any key...\n";
+                    else
+                        cout << C_RED "\n No item here or equipment slots full!" C_RESET "\n Press any key...\n";
                     getSingleChar();
                 }
                 showItemInfo = false; break;
@@ -555,7 +724,7 @@ void Game::play() {
 }
 
 // =============================================================================
-// Battle Arena
+// Battle Arena  —  FGO duel style
 // =============================================================================
 
 void Game::playBattleArena() {
@@ -571,19 +740,19 @@ void Game::playBattleArena() {
                 pool.push_back(s);
         }
 
-        cout << "=== BATTLE ARENA ===" << endl;
-        cout << "Your Servant: " << myServant->getName() << endl;
+        cout << C_GOLD << fgoRule("BATTLE ARENA", 44, C_DGOLD) << C_RESET << "\n";
+        cout << C_DIM "  Your Servant: " C_WHITE << myServant->getName() << C_RESET << "\n";
         myServant->renderAscii();
 
         if (pool.empty()) {
-            cout << "\n\033[93mAll servants in this Holy Grail War have been defeated!\033[0m" << endl;
-            cout << "You are the last Master standing." << endl;
-            cout << "\nPress any key to return..." << endl;
+            cout << "\n" C_GOLD "  All servants have been defeated!" C_RESET "\n";
+            cout << C_DIM "  You are the last Master standing." C_RESET "\n\n";
+            cout << C_DIM "  Press any key to return..." C_RESET "\n";
             getSingleChar(); return;
         }
 
-        cout << "\nRemaining enemies: " << pool.size() << endl;
-        cout << "Press B to enter battle, any other key to exit..." << endl;
+        cout << C_DIM "\n  Remaining enemies: " C_WHITE << pool.size() << C_RESET << "\n";
+        cout << C_DIM "  Press " C_GOLD "B" C_DIM " to enter battle, any other key to exit..." C_RESET "\n";
         int key = (int)getSingleChar();
         if (key != 'b' && key != 'B') return;
 
@@ -613,28 +782,67 @@ bool Game::battleOneEnemy(Enemy& enemy) {
     while (pHP > 0 && eHP > 0) {
         printf("\033[2J"); printf("\033[H"); fflush(stdout);
 
-        cout << "=== DUEL ===" << endl;
-        cout << myServant->getName() << "  HP: " << pHP << "/" << pMaxHP << endl;
+        // Health bars
+        auto hpBar = [](int hp, int maxHp, int w) -> string {
+            int filled = (maxHp > 0) ? (hp * w / maxHp) : 0;
+            string bar = C_GREEN;
+            for (int i = 0; i < w; i++)
+                bar += (i < filled) ? "\u2588" : (C_DIM "\u2591" C_GREEN);
+            bar += C_RESET;
+            return bar;
+        };
+
+        // Player header
+        cout << C_GOLD "\u2554" << rep(BD_DH, 42) << "\u2557" C_RESET "\n";
+        cout << C_GOLD "\u2551 " C_WHITE + padRight(myServant->getName(), 20)
+             << C_DIM "HP: " C_GREEN << pHP << "/" << pMaxHP;
+        int pad1 = 42 - 2 - (int)myServant->getName().size() - 4 -
+                   (int)std::to_string(pHP).size() - 1 -
+                   (int)std::to_string(pMaxHP).size();
+        if (pad1 > 0) for (int i = 0; i < pad1; i++) cout << ' ';
+        cout << C_GOLD " \u2551" C_RESET "\n";
+        cout << C_GOLD "\u2551 " << hpBar(pHP, pMaxHP, 38) << " \u2551" C_RESET "\n";
+        cout << C_GOLD "\u2560" << rep(BD_DH, 42) << "\u2563" C_RESET "\n";
+
         myServant->renderAscii();
-        cout << "\nVS\n" << endl;
-        cout << en.getName() << "  HP: " << eHP << "/" << en.getMaxHP() << endl;
+
+        // VS divider
+        cout << C_DIM "                 VS" C_RESET "\n\n";
+
+        // Enemy header
+        cout << C_RED "\u2554" << rep(BD_DH, 42) << "\u2557" C_RESET "\n";
+        cout << C_RED "\u2551 " C_WHITE + padRight(en.getName(), 20)
+             << C_DIM "HP: " C_BRED << eHP << "/" << en.getMaxHP();
+        int pad2 = 42 - 2 - (int)en.getName().size() - 4 -
+                   (int)std::to_string(eHP).size() - 1 -
+                   (int)std::to_string(en.getMaxHP()).size();
+        if (pad2 > 0) for (int i = 0; i < pad2; i++) cout << ' ';
+        cout << C_RED " \u2551" C_RESET "\n";
+        cout << C_RED "\u2551 " << hpBar(eHP, en.getMaxHP(), 38) << " \u2551" C_RESET "\n";
+        cout << C_RED "\u255a" << rep(BD_DH, 42) << "\u255d" C_RESET "\n";
+
         en.renderAscii();
 
-        cout << "\nChoose action:" << endl;
-        cout << "  A - Basic attack" << endl;
+        // Action menu
+        cout << "\n" C_DIM + rep(BD_H, 44) + C_RESET "\n";
+        cout << C_GOLD "  A" C_DIM " - Basic attack" C_RESET "\n";
         const auto& nps = myServant->getNPs();
         for (std::size_t i = 0; i < nps.size(); ++i) {
-            cout << "  " << (i + 1) << " - NP: " << nps[i].name;
-            if (!myServant->isNPAvailable(i)) cout << "  \033[90m(used)\033[0m";
-            cout << endl;
+            bool avail = myServant->isNPAvailable(i);
+            cout << (avail ? C_GOLD : C_DIM)
+                 << "  " << (i + 1) << " - " C_LGOLD << nps[i].name
+                 << C_DIM " [Dmg: " C_BRED << nps[i].baseDamage
+                 << C_DIM " Scale: " C_ORANGE << nps[i].damageScale << "x"
+                 << (avail ? "" : C_DIM "  (used)")
+                 << C_RESET "\n";
         }
-        cout << "  E - Escape" << endl;
+        cout << C_DIM "  E - Escape" C_RESET "\n";
 
         int  key      = (int)getSingleChar();
         bool usedTurn = false;
 
         if (key == 'e' || key == 'E') {
-            cout << "\nYou fled from battle.\nPress any key..." << endl;
+            cout << C_DIM "\n  You fled from battle." C_RESET "\n  Press any key...\n";
             getSingleChar(); return false;
 
         } else if (key == 'a' || key == 'A') {
@@ -643,10 +851,10 @@ bool Game::battleOneEnemy(Enemy& enemy) {
                 int dmg = pStrEff - (eDurEff / 2);
                 if (dmg < 3) dmg = 3;
                 eHP -= dmg; if (eHP < 0) eHP = 0;
-                cout << "\nYou strike " << en.getName()
-                     << " for \033[97m" << dmg << "\033[0m damage!" << endl;
+                cout << "\n" C_WHITE "  You strike " C_CYAN << en.getName()
+                     << C_WHITE " for " C_GREEN << dmg << C_WHITE " damage!" C_RESET "\n";
             } else {
-                cout << "\nYour attack is deflected!" << endl;
+                cout << "\n" C_DIM "  Your attack is deflected!" C_RESET "\n";
             }
             usedTurn = true;
 
@@ -654,33 +862,47 @@ bool Game::battleOneEnemy(Enemy& enemy) {
             std::size_t ni = static_cast<std::size_t>(key - '1');
             if (ni < nps.size() && myServant->isNPAvailable(ni)) {
                 int hit = std::max(20, std::min(99, 85 + (pAgiEff - eAgiEff)));
-                cout << "\n\033[93m=== NOBLE PHANTASM ===\033[0m" << endl;
-                cout << "\033[97m" << nps[ni].name << "\033[0m" << endl;
-                cout << nps[ni].description << endl;
+                // NP activation banner
+                cout << "\n" C_GOLD
+                     "  \u2554" << rep(BD_DH, 38) << "\u2557" C_RESET "\n";
+                cout << C_GOLD "  \u2551" C_LGOLD;
+                string title = "  NOBLE PHANTASM: " + nps[ni].name + "  ";
+                cout << padRight(title, 38);
+                cout << C_GOLD "\u2551" C_RESET "\n";
+                cout << C_GOLD "  \u2551" C_DIM;
+                cout << padRight("  Dmg: " + std::to_string(nps[ni].baseDamage) +
+                                 "  Scale: " + std::to_string(nps[ni].damageScale) + "x", 38);
+                cout << C_GOLD "\u2551" C_RESET "\n";
+                cout << C_GOLD "  \u2551" C_SILVER;
+                cout << padRight("  " + nps[ni].description, 38);
+                cout << C_GOLD "\u2551" C_RESET "\n";
+                cout << C_GOLD "  \u255a" << rep(BD_DH, 38) << "\u255d" C_RESET "\n";
+
                 if (std::rand() % 100 < hit) {
                     int dmg = myServant->noblePhantasmDamage(ni,
                                   pStrEff - myServant->getStrength(), eDurEff / 2);
                     dmg /= 2; if (dmg < 12) dmg = 12;
                     eHP -= dmg; if (eHP < 0) eHP = 0;
                     myServant->markNPUsed(ni);
-                    cout << "Hits for \033[93m" << dmg << "\033[0m damage!" << endl;
+                    cout << C_GOLD "  Hits for " C_BRED << dmg << C_GOLD " damage!" C_RESET "\n";
                 } else {
                     myServant->markNPUsed(ni);
-                    cout << "The Noble Phantasm was neutralised!" << endl;
+                    cout << C_DIM "  The Noble Phantasm was neutralised!" C_RESET "\n";
                 }
                 usedTurn = true;
             }
         }
 
-        if (!usedTurn) cout << "\nYou hesitate — your turn is lost." << endl;
+        if (!usedTurn) cout << "\n" C_DIM "  You hesitate — turn lost." C_RESET "\n";
 
         if (eHP <= 0) {
-            cout << "\n\033[92m" << en.getName() << " has been defeated!\033[0m" << endl;
-            cout << "Press any key..." << endl;
+            cout << "\n" C_GREEN "  " << en.getName() << " has been defeated!" C_RESET "\n";
+            cout << C_DIM "  Press any key..." C_RESET "\n";
             getSingleChar(); return true;
         }
 
-        cout << "\n" << en.getName() << "'s turn..." << endl;
+        // Enemy turn
+        cout << "\n" C_RED "  " << en.getName() << "'s turn..." C_RESET "\n";
         bool enemyUsedNP = false;
         const auto& eNPs = en.getNPs();
         for (std::size_t i = 0; i < eNPs.size(); ++i) {
@@ -689,10 +911,16 @@ bool Game::battleOneEnemy(Enemy& enemy) {
                 dmg /= 2; if (dmg < 12) dmg = 12;
                 pHP -= dmg; if (pHP < 0) pHP = 0;
                 en.markNPUsed(i);
-                cout << "\033[91m=== ENEMY NOBLE PHANTASM ===\033[0m" << endl;
-                cout << "\033[97m" << eNPs[i].name << "\033[0m" << endl;
-                cout << eNPs[i].description << endl;
-                cout << "Deals \033[91m" << dmg << "\033[0m damage to you!" << endl;
+                cout << C_RED "  \u2554" << rep(BD_DH, 38) << "\u2557" C_RESET "\n";
+                cout << C_RED "  \u2551" C_BRED;
+                string etitle = "  ENEMY NP: " + eNPs[i].name + "  ";
+                cout << padRight(etitle, 38);
+                cout << C_RED "\u2551" C_RESET "\n";
+                cout << C_RED "  \u2551" C_SILVER;
+                cout << padRight("  " + eNPs[i].description, 38);
+                cout << C_RED "\u2551" C_RESET "\n";
+                cout << C_RED "  \u255a" << rep(BD_DH, 38) << "\u255d" C_RESET "\n";
+                cout << C_RED "  Deals " C_BRED << dmg << C_RED " damage to you!" C_RESET "\n";
                 enemyUsedNP = true; break;
             }
         }
@@ -702,19 +930,20 @@ bool Game::battleOneEnemy(Enemy& enemy) {
                 int dmg = eStrEff - (pDurEff / 2);
                 if (dmg < 3) dmg = 3;
                 pHP -= dmg; if (pHP < 0) pHP = 0;
-                cout << en.getName() << " strikes you for \033[91m" << dmg << "\033[0m damage!" << endl;
+                cout << C_WHITE "  " << en.getName()
+                     << C_RED " strikes you for " C_BRED << dmg << C_RED " damage!" C_RESET "\n";
             } else {
-                cout << en.getName() << "'s attack misses!" << endl;
+                cout << C_DIM "  " << en.getName() << "'s attack misses!" C_RESET "\n";
             }
         }
 
         if (pHP <= 0) {
-            cout << "\n\033[91mYour servant has fallen...\033[0m" << endl;
-            cout << "Press any key..." << endl;
+            cout << "\n" C_RED "  Your servant has fallen..." C_RESET "\n";
+            cout << C_DIM "  Press any key..." C_RESET "\n";
             getSingleChar(); return false;
         }
 
-        cout << "\nPress any key for next round..." << endl;
+        cout << "\n" C_DIM "  Press any key for next round..." C_RESET "\n";
         getSingleChar();
     }
     return false;
