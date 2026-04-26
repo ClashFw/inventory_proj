@@ -798,4 +798,6 @@ CMakeFiles/inventory.dir/main.cpp.o: \
   /Users/franciszekwasiak/CLionProjects/inventory_proj/servant.h \
   /Users/franciszekwasiak/CLionProjects/inventory_proj/ItemGenerator.h \
   /Users/franciszekwasiak/CLionProjects/inventory_proj/shop.h \
-  /Users/franciszekwasiak/CLionProjects/inventory_proj/enemy.h
+  /Users/franciszekwasiak/CLionProjects/inventory_proj/enemy.h \
+  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/set \
+  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__tree

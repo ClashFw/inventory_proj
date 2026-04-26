@@ -799,6 +799,8 @@ CMakeFiles/inventory.dir/game.cpp.o: \
   /Users/franciszekwasiak/CLionProjects/inventory_proj/ItemGenerator.h \
   /Users/franciszekwasiak/CLionProjects/inventory_proj/shop.h \
   /Users/franciszekwasiak/CLionProjects/inventory_proj/enemy.h \
+  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/set \
+  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__tree \
   /Users/franciszekwasiak/CLionProjects/inventory_proj/singleCharacter.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/TargetConditionals.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/termios.h \

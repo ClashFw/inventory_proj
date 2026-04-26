@@ -12,23 +12,23 @@ enum class Series {
 struct NoblePhantasm {
     std::string name;
     std::string description;
-    int baseDamage;      // flat damage component
-    float damageScale;   // multiplier on Strength
+    int         baseDamage;
+    float       damageScale;
 };
 
 class Servant {
 private:
     std::string name;
-    Series series;
+    Series      series;
 
     int maxHP;
     int currentHP;
     int strength;
-    int durability;  // base damage reduction
-    int agility;     // hit / evade modifier
+    int durability;
+    int agility;
 
     std::vector<NoblePhantasm> noblePhantasms;
-    std::vector<bool> npUsedThisBattle;
+    std::vector<bool>          npUsedThisBattle;
 
     std::string asciiArt;
 
@@ -50,6 +50,7 @@ public:
     int                getStrength()  const { return strength; }
     int                getDurability()const { return durability; }
     int                getAgility()   const { return agility; }
+    const std::string& getAsciiArt()  const { return asciiArt; }   // NEW
 
     void setCurrentHP(int hp);
     bool isAlive() const { return currentHP > 0; }
@@ -58,17 +59,15 @@ public:
     bool isNPAvailable(std::size_t idx) const;
     void resetForNewBattle();
 
-    // Damage helpers; defenderDurEff is the defender's effective durability
-    int basicAttackDamage(int attackerStrBonus, int defenderDurEff) const;
-    int noblePhantasmDamage(std::size_t idx,
-                            int attackerStrBonus,
-                            int defenderDurEff) const;
+    int  basicAttackDamage(int attackerStrBonus, int defenderDurEff) const;
+    int  noblePhantasmDamage(std::size_t idx,
+                             int attackerStrBonus,
+                             int defenderDurEff) const;
     void markNPUsed(std::size_t idx);
 
     void renderAscii() const;
 
-    // Factory helpers
-    static Servant randomServant();
+    static Servant              randomServant();
     static std::vector<Servant> enemyPoolForSeries(Series s);
 };
 
