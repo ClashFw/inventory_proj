@@ -158,14 +158,6 @@ int Inventory::getEmptySlotCount() const {
     return n;
 }
 
-// =============================================================================
-// equipItem / unequipItem
-// T key behaviour:
-//   - If cursor is in BAG  (col 0-2) and item present  -> move to equip slot
-//   - If cursor is in EQUIP (col 3-4) and item present -> move back to bag
-//   - Otherwise return false so caller can show a message
-// =============================================================================
-
 bool Inventory::equipItem() {
     Item* item = items[currentRow][currentCol];
     if (!item) return false;
@@ -173,7 +165,7 @@ bool Inventory::equipItem() {
     bool inEquipZone = (currentCol >= 3);
 
     if (inEquipZone) {
-        // --- UNEQUIP: move back to any free bag slot ---
+        // UNEQUIP: move back to any free bag slot
         std::vector<std::pair<int,int>> bagEmpty;
         for (int i = 0; i < ROWS; i++)
             for (int j = 0; j < 3; j++)
@@ -185,7 +177,7 @@ bool Inventory::equipItem() {
         items[currentRow][currentCol] = nullptr;
         return true;
     } else {
-        // --- EQUIP: move to any free equip slot ---
+        // EQUIP: move to any free equip slot
         std::vector<std::pair<int,int>> equipEmpty;
         for (int i = 0; i < ROWS; i++)
             for (int j = 3; j < COLS; j++)
@@ -214,10 +206,6 @@ bool Inventory::dropItem() {
 
 void Inventory::cancelDrag() { isDragging = false; dragRow = -1; dragCol = -1; }
 bool Inventory::getIsDragging() const { return isDragging; }
-
-// =============================================================================
-// String-based renderers for the redesigned inventory screen
-// =============================================================================
 
 std::string Inventory::renderCellStr(int i, int j) const {
     if (!activeSlots[i][j]) return "      ";
