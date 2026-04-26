@@ -158,18 +158,45 @@ int Inventory::getEmptySlotCount() const {
     return n;
 }
 
+// =============================================================================
+// equipItem / unequipItem
+// T key behaviour:
+//   - If cursor is in BAG  (col 0-2) and item present  -> move to equip slot
+//   - If cursor is in EQUIP (col 3-4) and item present -> move back to bag
+//   - Otherwise return false so caller can show a message
+// =============================================================================
+
 bool Inventory::equipItem() {
     Item* item = items[currentRow][currentCol];
     if (!item) return false;
-    std::vector<std::pair<int,int>> empty;
-    for (int i = 0; i < ROWS; i++)
-        for (int j = 3; j < COLS; j++)
-            if (activeSlots[i][j] && !items[i][j]) empty.push_back({i, j});
-    if (empty.empty()) return false;
-    auto rc = empty[std::rand() % empty.size()];
-    items[rc.first][rc.second] = item;
-    items[currentRow][currentCol] = nullptr;
-    return true;
+
+    bool inEquipZone = (currentCol >= 3);
+
+    if (inEquipZone) {
+        // --- UNEQUIP: move back to any free bag slot ---
+        std::vector<std::pair<int,int>> bagEmpty;
+        for (int i = 0; i < ROWS; i++)
+            for (int j = 0; j < 3; j++)
+                if (activeSlots[i][j] && !items[i][j])
+                    bagEmpty.push_back({i, j});
+        if (bagEmpty.empty()) return false;
+        auto rc = bagEmpty[std::rand() % bagEmpty.size()];
+        items[rc.first][rc.second] = item;
+        items[currentRow][currentCol] = nullptr;
+        return true;
+    } else {
+        // --- EQUIP: move to any free equip slot ---
+        std::vector<std::pair<int,int>> equipEmpty;
+        for (int i = 0; i < ROWS; i++)
+            for (int j = 3; j < COLS; j++)
+                if (activeSlots[i][j] && !items[i][j])
+                    equipEmpty.push_back({i, j});
+        if (equipEmpty.empty()) return false;
+        auto rc = equipEmpty[std::rand() % equipEmpty.size()];
+        items[rc.first][rc.second] = item;
+        items[currentRow][currentCol] = nullptr;
+        return true;
+    }
 }
 
 bool Inventory::startDrag() {
@@ -189,7 +216,7 @@ void Inventory::cancelDrag() { isDragging = false; dragRow = -1; dragCol = -1; }
 bool Inventory::getIsDragging() const { return isDragging; }
 
 // =============================================================================
-// NEW: String-based renderers for the redesigned inventory screen
+// String-based renderers for the redesigned inventory screen
 // =============================================================================
 
 std::string Inventory::renderCellStr(int i, int j) const {
@@ -228,26 +255,26 @@ std::string Inventory::renderCellStr(int i, int j) const {
 
 std::vector<std::string> Inventory::renderBagLines() const {
     std::vector<std::string> lines;
-    lines.push_back("╔══════ \033[97mBAG\033[0m ════════╗");
+    lines.push_back("\033[38;5;240m\u250c\u2500\u2500\u2500\u2500\u2500\u2500 \033[97mBAG\033[38;5;240m \u2500\u2500\u2500\u2500\u2500\u2500\u2510\033[0m");
     for (int i = 0; i < ROWS; i++) {
-        std::string row = "\033[90m║\033[0m ";
+        std::string row = "\033[38;5;240m\u2502\033[0m ";
         for (int j = 0; j < 3; j++) row += renderCellStr(i, j);
-        row += "\033[90m║\033[0m";
+        row += "\033[38;5;240m\u2502\033[0m";
         lines.push_back(row);
     }
-    lines.push_back("\033[90m╚═══════════════════╝\033[0m");
+    lines.push_back("\033[38;5;240m\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\033[0m");
     return lines;
 }
 
 std::vector<std::string> Inventory::renderEquipLines() const {
     std::vector<std::string> lines;
-    lines.push_back("╔═══ \033[93mEQUIP\033[0m ═══╗");
+    lines.push_back("\033[38;5;178m\u250c\u2500\u2500\u2500 \033[93mEQUIP\033[38;5;178m \u2500\u2500\u2500\u2510\033[0m");
     for (int i = 0; i < ROWS; i++) {
-        std::string row = "\033[90m║\033[0m ";
+        std::string row = "\033[38;5;178m\u2502\033[0m ";
         for (int j = 3; j < COLS; j++) row += renderCellStr(i, j);
-        row += "\033[90m║\033[0m";
+        row += "\033[38;5;178m\u2502\033[0m";
         lines.push_back(row);
     }
-    lines.push_back("\033[90m╚═════════════╝\033[0m");
+    lines.push_back("\033[38;5;178m\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\033[0m");
     return lines;
 }
