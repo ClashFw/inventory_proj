@@ -7,7 +7,9 @@
 enum Rarity {
     common,
     magic,
-    rare
+    rare,
+    legendary,
+    divine
 };
 
 enum ItemType {
@@ -27,6 +29,7 @@ private:
     int level;
     int price;
     int percentValue;
+    bool shopOnly;   // legendary / divine are shop-exclusive
 
 public:
     Item();
@@ -53,11 +56,19 @@ public:
     int getPercentValue() const;
     void setPercentValue(int newPercentValue);
 
+    bool isShopOnly() const;
+    void setShopOnly(bool v);
+
     void use();
     void displayItemInfo() const;
 
+    // ANSI colour string for this item
+    std::string rarityColor() const;
+
     static std::string rarityToString(Rarity rarity);
+    static std::string rarityColorStr(Rarity rarity);
     static std::string typeToString(ItemType type);
+    static std::string typeColorStr(ItemType type);
 };
 
 #endif // ITEM_H

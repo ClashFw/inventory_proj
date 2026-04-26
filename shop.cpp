@@ -2,415 +2,324 @@
 #include <iostream>
 #include <algorithm>
 #include <cctype>
+#include <string>
+
+// ── ANSI palette ──────────────────────────────────────────────────────────
+#define RST   "\033[0m"
+#define GOLD  "\033[38;5;220m"
+#define DGOLD "\033[38;5;178m"
+#define LGOLD "\033[38;5;229m"
+#define DIM   "\033[38;5;240m"
+#define WHITE "\033[97m"
+#define SILV  "\033[38;5;250m"
+#define CYAN  "\033[96m"
+#define BLUE  "\033[38;5;39m"
+#define RED   "\033[38;5;196m"
+#define BRED  "\033[91m"
+#define GRN   "\033[92m"
+#define ORG   "\033[38;5;214m"
+#define MAG   "\033[38;5;201m"
+// rarity-specific
+#define COL_COM  "\033[37m"
+#define COL_MAG  "\033[38;5;39m"
+#define COL_RARE "\033[38;5;220m"
+#define COL_LEG  "\033[38;5;202m"
+#define COL_DIV  "\033[38;5;201m"
+
+// box glyphs
+#define DH  "\u2550"
+#define DV  "\u2551"
+#define DTL "\u2554"
+#define DTR "\u2557"
+#define DBL "\u255a"
+#define DBR "\u255d"
+#define DLT "\u2560"
+#define DRT "\u2563"
+#define SH  "\u2500"
+#define SV  "\u2502"
+
+static std::string rep(const std::string& s, int n) {
+    std::string o; for (int i = 0; i < n; i++) o += s; return o;
+}
+
+static int visLen(const std::string& s) {
+    int l = 0; bool e = false;
+    for (char c : s) {
+        if (c == '\033') e = true;
+        else if (e && c == 'm') e = false;
+        else if (!e) {
+            if ((unsigned char)c < 0x80 || (unsigned char)c >= 0xC0) ++l;
+        }
+    }
+    return l;
+}
+
+static std::string pad(const std::string& s, int w) {
+    int v = visLen(s);
+    return v >= w ? s : s + std::string(w - v, ' ');
+}
+
+static const char* rarityCol(Rarity r) {
+    switch (r) {
+        case common:    return COL_COM;
+        case magic:     return COL_MAG;
+        case rare:      return COL_RARE;
+        case legendary: return COL_LEG;
+        case divine:    return COL_DIV;
+    }
+    return RST;
+}
+
+static const char* typeCol(ItemType t) {
+    switch (t) {
+        case potion:   return GRN;
+        case sword:    return RED;
+        case armor:    return BLUE;
+        case movement: return ORG;
+    }
+    return RST;
+}
 
 static bool shopItemMatches(Item* item,
                             const std::string& searchQuery,
-                            bool rarityFilterEnabled,
-                            Rarity rarityFilter,
-                            bool typeFilterEnabled,
-                            ItemType typeFilter)
+                            bool rarityFilterEnabled, Rarity rarityFilter,
+                            bool typeFilterEnabled,   ItemType typeFilter)
 {
     if (!item) return false;
-
     if (rarityFilterEnabled && item->getRarity() != rarityFilter) return false;
-    if (typeFilterEnabled && item->getType() != typeFilter) return false;
-
+    if (typeFilterEnabled   && item->getType()   != typeFilter)   return false;
     if (searchQuery.empty()) return true;
-
-    std::string lowerQuery = searchQuery;
-    std::transform(lowerQuery.begin(), lowerQuery.end(), lowerQuery.begin(),
+    std::string lq = searchQuery;
+    std::transform(lq.begin(), lq.end(), lq.begin(),
                    [](unsigned char c){ return (char)std::tolower(c); });
-
-    std::string itemName = item->getName();
-    std::transform(itemName.begin(), itemName.end(), itemName.begin(),
+    std::string n = item->getName();
+    std::transform(n.begin(), n.end(), n.begin(),
                    [](unsigned char c){ return (char)std::tolower(c); });
-
-    std::string itemType = Item::typeToString(item->getType());
-    std::transform(itemType.begin(), itemType.end(), itemType.begin(),
+    std::string tp = Item::typeToString(item->getType());
+    std::transform(tp.begin(), tp.end(), tp.begin(),
                    [](unsigned char c){ return (char)std::tolower(c); });
-
-    return itemName.find(lowerQuery) != std::string::npos ||
-           itemType.find(lowerQuery) != std::string::npos;
+    return n.find(lq) != std::string::npos || tp.find(lq) != std::string::npos;
 }
 
-Shop::Shop()
-{
+// ── Constructor / Destructor ──────────────────────────────────────────────
+Shop::Shop() {
     itemGenerator = new ItemGenerator();
-
     int roll = rand() % 100;
-    if (roll < 70) {
-        playerGold = 200 + (rand() % 201);
-    } else if (roll < 90) {
-        playerGold = 400 + (rand() % 101);
-    } else {
-        playerGold = 500 + (rand() % 301);
-    }
-
-    selectedIndex = 0;
-    searchQuery = "";
-
+    if (roll < 70)      playerGold = 200 + (rand() % 201);
+    else if (roll < 90) playerGold = 400 + (rand() % 101);
+    else                playerGold = 500 + (rand() % 301);
+    selectedIndex       = 0;
+    searchQuery         = "";
     rarityFilterEnabled = false;
-    rarityFilter = common;
-
-    typeFilterEnabled = false;
-    typeFilter = potion;
-
+    rarityFilter        = common;
+    typeFilterEnabled   = false;
+    typeFilter          = potion;
     generateShopInventory(10);
 }
 
-Shop::~Shop()
-{
-    for (Item* item : shopInventory) {
-        delete item;
-    }
+Shop::~Shop() {
+    for (Item* i : shopInventory) delete i;
     shopInventory.clear();
     delete itemGenerator;
 }
 
-void Shop::generateShopInventory(int itemCount)
-{
-    for (Item* item : shopInventory) {
-        delete item;
-    }
+void Shop::generateShopInventory(int count) {
+    for (Item* i : shopInventory) delete i;
     shopInventory.clear();
-
-    std::vector<Item*> newItems = itemGenerator->generateRandomItems(itemCount, itemCount);
-    shopInventory = newItems;
+    // Use shop-specific generator so legendary/divine can appear
+    for (int i = 0; i < count; i++)
+        shopInventory.push_back(itemGenerator->generateShopItem());
     selectedIndex = 0;
 }
 
-void Shop::displayShop()
-{
-    std::cout << "=== SHOP ===" << std::endl;
-    std::cout << "Your Gold: " << playerGold << "g" << std::endl;
-    std::cout << "Items in shop: " << shopInventory.size() << std::endl;
-    std::cout << std::endl;
+// ── Shared row renderer ────────────────────────────────────────────────────
+void Shop::printShopRow(int actualIdx, bool selected) const {
+    Item* item = shopInventory[actualIdx];
+    Rarity  r  = item->getRarity();
+    ItemType t = item->getType();
+    const char* rc = rarityCol(r);
+    const char* tc = typeCol(t);
 
-    std::cout << "ID | Name      | Type      | Price | Rarity | Effect" << std::endl;
-    std::cout << "----------------------------------------------------" << std::endl;
+    // selector arrow
+    std::cout << (selected ? GOLD " \u25b6 " : DIM "   ");
 
-    for (size_t i = 0; i < shopInventory.size(); i++) {
-        Item* item = shopInventory[i];
+    // index number
+    std::string idx = std::to_string(actualIdx + 1);
+    std::cout << DIM << pad(idx, 2) << "  " RST;
 
-        if ((int)i == selectedIndex) std::cout << ">>";
-        else std::cout << "  ";
+    // name (rarity-coloured, padded to 22)
+    std::string name = item->getName();
+    std::cout << rc << pad(name, 22) << RST "  ";
 
-        std::cout << (i + 1);
-        if (i + 1 < 10) std::cout << "  ";
-        else std::cout << " ";
+    // type badge
+    std::string typStr = Item::typeToString(t);
+    std::cout << tc << pad(typStr, 8) << RST "  ";
 
-        std::string name = item->getName();
-        std::cout << "| " << name;
-        for (size_t j = name.length(); j < 9; j++) std::cout << " ";
+    // rarity badge (padded to 10)
+    std::string rarStr = Item::rarityToString(r);
+    std::cout << rc << pad(rarStr, 10) << RST "  ";
 
-        std::string type = Item::typeToString(item->getType());
-        std::cout << "| " << type;
-        for (size_t j = type.length(); j < 9; j++) std::cout << " ";
+    // price
+    std::string priceStr = std::to_string(item->getPrice()) + "g";
+    std::cout << GOLD << pad(priceStr, 6) << RST "  ";
 
-        std::cout << "| " << item->getPrice();
-        if (item->getPrice() < 10) std::cout << "    ";
-        else if (item->getPrice() < 100) std::cout << "   ";
-        else std::cout << "  ";
-
-        std::string rarity = Item::rarityToString(item->getRarity());
-        std::cout << "| " << rarity;
-        for (size_t j = rarity.length(); j < 6; j++) std::cout << " ";
-
-        std::cout << "| " << item->getPercentValue() << "%" << std::endl;
-    }
-
-    std::cout << std::endl;
-    std::cout << "Controls:" << std::endl;
-    std::cout << "W/S-Select  B-Buy  F-Search  R-Restock  E-Exit" << std::endl;
+    // effect
+    std::string fxStr = "+" + std::to_string(item->getPercentValue()) + "%";
+    std::cout << GRN << fxStr << RST "\n";
 }
 
-void Shop::displayShopWithSearch()
-{
+// ── displayShop ───────────────────────────────────────────────────────────
+void Shop::displayShop() {
+    // Header
+    std::cout << GOLD DTL << rep(DH, 70) << DTR RST "\n";
+    std::cout << GOLD DV LGOLD "  \u2741  SHOP OF CHALDEA  \u2741  "
+              << DIM "Treasury: " GOLD << playerGold << "g";
+    int gl = 38 + (int)std::to_string(playerGold).size();
+    for (int i = gl; i < 69; i++) std::cout << ' ';
+    std::cout << GOLD DV RST "\n";
+    std::cout << GOLD DLT << rep(DH, 70) << DRT RST "\n";
+
+    // Column headers
+    std::cout << DIM "    #   "
+              << pad("NAME", 22) << "  "
+              << pad("TYPE", 8)  << "  "
+              << pad("RARITY", 10) << "  "
+              << pad("PRICE", 6)  << "  "
+              << "EFFECT" RST "\n";
+    std::cout << DIM << rep(SH, 70) << RST "\n";
+
+    for (int i = 0; i < (int)shopInventory.size(); i++)
+        printShopRow(i, i == selectedIndex);
+
+    std::cout << GOLD << rep(SH, 70) << RST "\n";
+}
+
+// ── displayShopWithSearch ─────────────────────────────────────────────────
+void Shop::displayShopWithSearch() {
     std::vector<int> results = getSearchResults();
 
-    std::cout << "=== SHOP FILTERED ===" << std::endl;
-    std::cout << "Your Gold: " << playerGold << "g" << std::endl;
-    std::cout << "Search: \"" << searchQuery << "\"" << std::endl;
-    std::cout << std::endl;
+    std::cout << GOLD DTL << rep(DH, 70) << DTR RST "\n";
+    std::cout << GOLD DV LGOLD "  \u2741  SHOP  \u2741  "
+              << DIM "Filter: \"" CYAN << searchQuery << DIM "\""
+              << DIM "  Results: " WHITE << results.size();
+    int gl2 = 28 + (int)searchQuery.size() + (int)std::to_string(results.size()).size();
+    for (int i = gl2; i < 69; i++) std::cout << ' ';
+    std::cout << GOLD DV RST "\n";
+    std::cout << GOLD DLT << rep(DH, 70) << DRT RST "\n";
 
     if (results.empty()) {
-        std::cout << "No items matched current search/filter." << std::endl;
+        std::cout << DIM "  No items matched the search/filter." RST "\n";
+        std::cout << GOLD << rep(SH, 70) << RST "\n";
         return;
     }
 
-    std::cout << "ID | Name      | Type      | Price | Rarity | Effect" << std::endl;
-    std::cout << "----------------------------------------------------" << std::endl;
+    std::cout << DIM "    #   "
+              << pad("NAME", 22) << "  "
+              << pad("TYPE", 8)  << "  "
+              << pad("RARITY", 10) << "  "
+              << pad("PRICE", 6)  << "  "
+              << "EFFECT" RST "\n";
+    std::cout << DIM << rep(SH, 70) << RST "\n";
 
-    for (size_t i = 0; i < results.size(); i++) {
-        int actualIndex = results[i];
-        Item* item = shopInventory[actualIndex];
+    for (int idx : results)
+        printShopRow(idx, idx == selectedIndex);
 
-        if (actualIndex == selectedIndex) std::cout << ">>";
-        else std::cout << "  ";
-
-        std::cout << (actualIndex + 1);
-        if (actualIndex + 1 < 10) std::cout << "  ";
-        else std::cout << " ";
-
-        std::string name = item->getName();
-        std::cout << "| " << name;
-        for (size_t j = name.length(); j < 9; j++) std::cout << " ";
-
-        std::string type = Item::typeToString(item->getType());
-        std::cout << "| " << type;
-        for (size_t j = type.length(); j < 9; j++) std::cout << " ";
-
-        std::cout << "| " << item->getPrice();
-        if (item->getPrice() < 10) std::cout << "    ";
-        else if (item->getPrice() < 100) std::cout << "   ";
-        else std::cout << "  ";
-
-        std::string rarity = Item::rarityToString(item->getRarity());
-        std::cout << "| " << rarity;
-        for (size_t j = rarity.length(); j < 6; j++) std::cout << " ";
-
-        std::cout << "| " << item->getPercentValue() << "%" << std::endl;
-    }
-
-    std::cout << std::endl;
-    std::cout << "Controls: W/S-Select  B-Buy  C-Clear filters/search  E-Exit" << std::endl;
+    std::cout << GOLD << rep(SH, 70) << RST "\n";
 }
 
-bool Shop::buyItem(int index, Inventory* playerInventory)
-{
+// ── buy / sell ────────────────────────────────────────────────────────────
+bool Shop::buyItem(int index, Inventory* inv) {
     if (index < 0 || index >= (int)shopInventory.size()) return false;
-
     Item* item = shopInventory[index];
     if (playerGold < item->getPrice()) return false;
-    if (!playerInventory->addItemAtRandomPosition(item)) return false;
-
+    if (!inv->addItemAtRandomPosition(item)) return false;
     playerGold -= item->getPrice();
     shopInventory.erase(shopInventory.begin() + index);
-
-    if (selectedIndex >= (int)shopInventory.size() && selectedIndex > 0) {
-        selectedIndex--;
-    }
-
+    if (selectedIndex >= (int)shopInventory.size() && selectedIndex > 0) selectedIndex--;
     return true;
 }
 
-Item* Shop::buyItemNoPlace(int index)
-{
+Item* Shop::buyItemNoPlace(int index) {
     if (index < 0 || index >= (int)shopInventory.size()) return nullptr;
-
     Item* item = shopInventory[index];
     if (playerGold < item->getPrice()) return nullptr;
-
     playerGold -= item->getPrice();
     shopInventory.erase(shopInventory.begin() + index);
-
-    if (selectedIndex >= (int)shopInventory.size() && selectedIndex > 0) {
-        selectedIndex--;
-    }
-
+    if (selectedIndex >= (int)shopInventory.size() && selectedIndex > 0) selectedIndex--;
     return item;
 }
 
-bool Shop::sellItem(Item* item)
-{
-    if (item == nullptr) return false;
-    int sellPrice = item->getPrice() / 2;
-    playerGold += sellPrice;
+bool Shop::sellItem(Item* item) {
+    if (!item) return false;
+    playerGold += item->getPrice() / 2;
     shopInventory.push_back(item);
     return true;
 }
 
-bool Shop::sellItemForPrice(Item* item, int price)
-{
-    if (item == nullptr) return false;
+bool Shop::sellItemForPrice(Item* item, int price) {
+    if (!item) return false;
     playerGold += price;
     shopInventory.push_back(item);
     return true;
 }
 
-void Shop::selectNext()
-{
+// ── navigation ────────────────────────────────────────────────────────────
+void Shop::selectNext() {
     if (shopInventory.empty()) return;
-    selectedIndex++;
-    if (selectedIndex >= (int)shopInventory.size()) selectedIndex = 0;
+    selectedIndex = (selectedIndex + 1) % (int)shopInventory.size();
 }
-
-void Shop::selectPrevious()
-{
+void Shop::selectPrevious() {
     if (shopInventory.empty()) return;
-    selectedIndex--;
-    if (selectedIndex < 0) selectedIndex = (int)shopInventory.size() - 1;
+    selectedIndex = (selectedIndex - 1 + (int)shopInventory.size()) % (int)shopInventory.size();
 }
-
-void Shop::selectNextFiltered(const std::vector<int>& results)
-{
-    if (results.empty()) return;
-
+void Shop::selectNextFiltered(const std::vector<int>& r) {
+    if (r.empty()) return;
     int pos = 0;
-    for (size_t i = 0; i < results.size(); i++) {
-        if (results[i] == selectedIndex) {
-            pos = (int)i;
-            break;
-        }
-    }
-
-    pos = (pos + 1) % (int)results.size();
-    selectedIndex = results[pos];
+    for (int i = 0; i < (int)r.size(); i++) if (r[i] == selectedIndex) { pos = i; break; }
+    selectedIndex = r[(pos + 1) % (int)r.size()];
 }
-
-void Shop::selectPreviousFiltered(const std::vector<int>& results)
-{
-    if (results.empty()) return;
-
+void Shop::selectPreviousFiltered(const std::vector<int>& r) {
+    if (r.empty()) return;
     int pos = 0;
-    for (size_t i = 0; i < results.size(); i++) {
-        if (results[i] == selectedIndex) {
-            pos = (int)i;
-            break;
-        }
-    }
-
-    pos = (pos - 1 + (int)results.size()) % (int)results.size();
-    selectedIndex = results[pos];
+    for (int i = 0; i < (int)r.size(); i++) if (r[i] == selectedIndex) { pos = i; break; }
+    selectedIndex = r[(pos - 1 + (int)r.size()) % (int)r.size()];
 }
 
-int Shop::getSelectedIndex() const
-{
-    return selectedIndex;
-}
+// ── search / filter ───────────────────────────────────────────────────────
+void Shop::setSearchQuery(const std::string& q) { searchQuery = q; }
+std::string Shop::getSearchQuery() const { return searchQuery; }
+void Shop::clearSearch() { searchQuery = ""; }
 
-void Shop::setSelectedIndex(int index)
-{
-    if (index >= 0 && index < (int)shopInventory.size()) {
-        selectedIndex = index;
-    }
-}
-
-void Shop::setSearchQuery(const std::string& query)
-{
-    searchQuery = query;
-}
-
-std::string Shop::getSearchQuery() const
-{
-    return searchQuery;
-}
-
-void Shop::clearSearch()
-{
-    searchQuery = "";
-}
-
-std::vector<int> Shop::getSearchResults()
-{
+std::vector<int> Shop::getSearchResults() {
     std::vector<int> results;
-
-    for (size_t i = 0; i < shopInventory.size(); i++) {
-        if (shopItemMatches(shopInventory[i],
-                            searchQuery,
+    for (int i = 0; i < (int)shopInventory.size(); i++)
+        if (shopItemMatches(shopInventory[i], searchQuery,
                             rarityFilterEnabled, rarityFilter,
-                            typeFilterEnabled, typeFilter)) {
-            results.push_back((int)i);
-        }
-    }
-
+                            typeFilterEnabled, typeFilter))
+            results.push_back(i);
     return results;
 }
 
-void Shop::setRarityFilter(Rarity rarity)
-{
-    rarityFilterEnabled = true;
-    rarityFilter = rarity;
-}
+void Shop::setRarityFilter(Rarity r)   { rarityFilterEnabled = true;  rarityFilter = r; }
+void Shop::clearRarityFilter()          { rarityFilterEnabled = false; }
+bool Shop::isRarityFilterEnabled() const{ return rarityFilterEnabled; }
+void Shop::setTypeFilter(ItemType t)    { typeFilterEnabled = true;   typeFilter   = t; }
+void Shop::clearTypeFilter()            { typeFilterEnabled = false; }
+bool Shop::isTypeFilterEnabled()  const { return typeFilterEnabled; }
+void Shop::clearAllFilters()            { searchQuery = ""; rarityFilterEnabled = false; typeFilterEnabled = false; }
 
-void Shop::clearRarityFilter()
-{
-    rarityFilterEnabled = false;
-}
+// ── gold helpers ──────────────────────────────────────────────────────────
+int  Shop::getPlayerGold()    const { return playerGold; }
+void Shop::setPlayerGold(int g)     { playerGold = g; }
+void Shop::addGold(int a)           { playerGold += a; }
+bool Shop::removeGold(int a)        { if (playerGold < a) return false; playerGold -= a; return true; }
 
-bool Shop::isRarityFilterEnabled() const
-{
-    return rarityFilterEnabled;
-}
-
-void Shop::setTypeFilter(ItemType type)
-{
-    typeFilterEnabled = true;
-    typeFilter = type;
-}
-
-void Shop::clearTypeFilter()
-{
-    typeFilterEnabled = false;
-}
-
-bool Shop::isTypeFilterEnabled() const
-{
-    return typeFilterEnabled;
-}
-
-void Shop::clearAllFilters()
-{
-    searchQuery = "";
-    rarityFilterEnabled = false;
-    typeFilterEnabled = false;
-}
-
-int Shop::getPlayerGold() const
-{
-    return playerGold;
-}
-
-void Shop::setPlayerGold(int gold)
-{
-    playerGold = gold;
-}
-
-void Shop::addGold(int amount)
-{
-    playerGold += amount;
-}
-
-bool Shop::removeGold(int amount)
-{
-    if (playerGold < amount) return false;
-    playerGold -= amount;
-    return true;
-}
-
-Item* Shop::getItemAt(int index)
-{
-    if (index < 0 || index >= (int)shopInventory.size()) return nullptr;
-    return shopInventory[index];
-}
-
-int Shop::getShopInventorySize() const
-{
-    return (int)shopInventory.size();
-}
-
-void Shop::addItemToShop(Item* item)
-{
-    shopInventory.push_back(item);
-}
-
-void Shop::removeItemFromShop(int index)
-{
-    if (index >= 0 && index < (int)shopInventory.size()) {
-        delete shopInventory[index];
-        shopInventory.erase(shopInventory.begin() + index);
-    }
-}
-
-void Shop::restockShop()
-{
-    generateShopInventory(10);
-}
-
-Item* Shop::getSelectedItem()
-{
-    if (selectedIndex >= 0 && selectedIndex < (int)shopInventory.size()) {
-        return shopInventory[selectedIndex];
-    }
-    return nullptr;
-}
+// ── misc ──────────────────────────────────────────────────────────────────
+int  Shop::getSelectedIndex()  const { return selectedIndex; }
+void Shop::setSelectedIndex(int i)   { if (i >= 0 && i < (int)shopInventory.size()) selectedIndex = i; }
+Item* Shop::getItemAt(int i)         { return (i >= 0 && i < (int)shopInventory.size()) ? shopInventory[i] : nullptr; }
+int  Shop::getShopInventorySize() const { return (int)shopInventory.size(); }
+void Shop::addItemToShop(Item* i)    { shopInventory.push_back(i); }
+void Shop::removeItemFromShop(int i) { if (i >= 0 && i < (int)shopInventory.size()) { delete shopInventory[i]; shopInventory.erase(shopInventory.begin() + i); } }
+void Shop::restockShop()             { generateShopInventory(10); }
+Item* Shop::getSelectedItem()        { return (selectedIndex >= 0 && selectedIndex < (int)shopInventory.size()) ? shopInventory[selectedIndex] : nullptr; }
