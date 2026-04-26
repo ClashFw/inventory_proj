@@ -172,7 +172,7 @@ static std::string mirrorAscii(const std::string& art) {
 }
 
 // ─────────────────────────────────────────────
-// Fate/stay night servants
+// Fate/stay night servants (Fifth War)
 // ─────────────────────────────────────────────
 
 static Servant makeSaberArtoriaStayNight() {
@@ -200,9 +200,10 @@ static Servant makeSaberArtoriaStayNight() {
 
     std::string mirrored = mirrorAscii(art);
 
+    // Shirou Emiya → Saber (Artoria) in FSN
     return Servant(
         "Saber (Artoria)",
-        "Artoria Pendragon",
+        "Shirou Emiya",
         "Knightly king wielding the holy sword Excalibur.",
         Series::StayNight,
         160, 26, 20, 18, nps, art, mirrored
@@ -232,9 +233,10 @@ static Servant makeArcherEmiya() {
 
     std::string mirrored = mirrorAscii(art);
 
+    // Rin Tohsaka → Archer (EMIYA)
     return Servant(
         "Archer (Emiya)",
-        "Emiya Shirou",
+        "Rin Tohsaka",
         "Counter guardian of infinite steel.",
         Series::StayNight,
         145, 24, 17, 23, nps, art, mirrored
@@ -263,9 +265,10 @@ static Servant makeLancerCu() {
 
     std::string mirrored = mirrorAscii(art);
 
+    // Kirei Kotomine → Lancer (Cu Chulainn) in FSN
     return Servant(
         "Lancer (Cu Chulainn)",
-        "Cu Chulainn",
+        "Kirei Kotomine",
         "Hound of Ulster bearing the cursed spear Gae Bolg.",
         Series::StayNight,
         150, 23, 16, 25, nps, art, mirrored
@@ -297,9 +300,10 @@ static Servant makeRiderMedusa() {
 
     std::string mirrored = mirrorAscii(art);
 
+    // Sakura Matou → Rider (Medusa)
     return Servant(
         "Rider (Medusa)",
-        "Medusa",
+        "Sakura Matou",
         "Gorgon sister mounted upon the winged steed.",
         Series::StayNight,
         140, 22, 15, 24, nps, art, mirrored
@@ -324,11 +328,12 @@ static Servant makeBerserkerHeracles() {
         STEEL         "       |   [" DARK_BROWN "___" STEEL "]   [" DARK_BROWN "___" STEEL "]   |\n"
         DARK_BROWN    "       |      /_________\\      |\n"
         DARK_BROWN    "       |_____/ / /   \\ \\ \\_____|\n"
-        STEEL         "           /__/ /_____\\" " \\__\\\n"
+        STEEL         "           /__/ /_____\\ \\__\\\n"
         RESET;
 
     std::string mirrored = mirrorAscii(art);
 
+    // Illyasviel von Einzbern → Berserker (Heracles)
     return Servant(
         "Berserker (Heracles)",
         "Illyasviel von Einzbern",
@@ -360,9 +365,10 @@ static Servant makeArcherGilgameshStayNight() {
 
     std::string mirrored = mirrorAscii(art);
 
+    // Shinji Matou → Archer (Gilgamesh), UBW route
     return Servant(
         "Archer (Gilgamesh)",
-        "Gilgamesh",
+        "Shinji Matou",
         "Golden king wielding a treasury of legends.",
         Series::StayNight,
         155, 27, 18, 20, nps, art, mirrored
@@ -391,9 +397,10 @@ static Servant makeAssassinSasaki() {
 
     std::string mirrored = mirrorAscii(art);
 
+    // Caster (Medea) → Assassin (Sasaki Kojiro)
     return Servant(
         "Assassin (Sasaki)",
-        "Kojirou Sasaki",
+        "Caster (Medea)",
         "Nameless swordsman who slashes beyond space.",
         Series::StayNight,
         135, 22, 14, 26, nps, art, mirrored
@@ -422,9 +429,10 @@ static Servant makeCasterMedea() {
 
     std::string mirrored = mirrorAscii(art);
 
+    // Souichirou Kuzuki → Caster (Medea)
     return Servant(
         "Caster (Medea)",
-        "Medea",
+        "Souichirou Kuzuki",
         "Witch of betrayal wielding ancient magecraft.",
         Series::StayNight,
         135, 20, 15, 18, nps, art, mirrored
@@ -452,9 +460,10 @@ static Servant makeAssassinHassanStayNight() {
 
     std::string mirrored = mirrorAscii(art);
 
+    // Optional: Kirei also controls Assassin in FSN
     return Servant(
         "Assassin (Hassan)",
-        "Hassan-i Sabbah",
+        "Kirei Kotomine",
         "Old man of the mountain, silent killer.",
         Series::StayNight,
         135, 21, 15, 24, nps, art, mirrored
@@ -462,7 +471,7 @@ static Servant makeAssassinHassanStayNight() {
 }
 
 // ─────────────────────────────────────────────
-// Fate/Zero servants
+// Fate/Zero servants (Fourth War)
 // ─────────────────────────────────────────────
 
 static Servant makeSaberArtoriaZero() {
@@ -488,9 +497,10 @@ static Servant makeSaberArtoriaZero() {
 
     std::string mirrored = mirrorAscii(art);
 
+    // Kiritsugu Emiya → Saber (Artoria) in Zero
     return Servant(
         "Saber (Artoria Zero)",
-        "Artoria Pendragon",
+        "Kiritsugu Emiya",
         "King in a different era of the Grail War.",
         Series::Zero,
         165, 27, 21, 19, nps, art, mirrored
@@ -510,7 +520,7 @@ static Servant makeArcherGilgameshZero() {
         DARK_GOLD     "             /__/ " BRIGHT_YELLOW "[] []" DARK_GOLD " \\__\\\n"
         GOLD          "               |  " DARK_GOLD "____" GOLD "  |\n"
         GOLD          "               | /" DARK_GOLD " |||| " GOLD "\\ |\n"
-        GOLD          "               |/ " DARK_GOLD " |||| " GOLD " \\|\n"
+        GOLD          "               |/ " DARK_GOLD " |||| " GOLD " \\\n"
         DARK_GOLD     "               |  " GOLD " |||| " DARK_GOLD "  |\n"
         DARK_GOLD     "               |  " GOLD " |||| " DARK_GOLD "  |\n"
         GOLD          "               |__" DARK_GOLD "_||_" GOLD "__|\n"
@@ -518,9 +528,10 @@ static Servant makeArcherGilgameshZero() {
 
     std::string mirrored = mirrorAscii(art);
 
+    // Tokiomi Tohsaka → Archer (Gilgamesh) in Zero
     return Servant(
         "Archer (Gilgamesh Zero)",
-        "Gilgamesh",
+        "Tokiomi Tohsaka",
         "Golden king summoned in the Fourth War.",
         Series::Zero,
         160, 29, 19, 21, nps, art, mirrored
@@ -540,16 +551,17 @@ static Servant makeRiderIskandar() {
         BROWN         "               | /" TAN "____" BROWN "\\ |\n"
         BROWN         "               |/" TAN " /||\\ " BROWN "\\|\n"
         CRIMSON       "               / " TAN "/ || \\ " CRIMSON "\\\n"
-        CRIMSON       "              /__/" TAN "_||_" CRIMSON "\\__\\\n"
+        CRIMSON       "              /__/ " TAN "_||_" CRIMSON "\\__\\\n"
         DARK_GOLD     "                /  ||  \\\n"
         DARK_GOLD     "               /___||___\\\n"
         RESET;
 
     std::string mirrored = mirrorAscii(art);
 
+    // Waver Velvet → Rider (Iskandar)
     return Servant(
         "Rider (Iskandar)",
-        "Iskandar",
+        "Waver Velvet",
         "Conquering king charging with his companions.",
         Series::Zero,
         190, 28, 21, 14, nps, art, mirrored
@@ -576,9 +588,10 @@ static Servant makeCasterGilles() {
 
     std::string mirrored = mirrorAscii(art);
 
+    // Ryuunosuke Uryuu → Caster (Gilles)
     return Servant(
         "Caster (Gilles)",
-        "Gilles de Rais",
+        "Ryuunosuke Uryuu",
         "Mad caster invoking a sea of horrors.",
         Series::Zero,
         145, 21, 16, 17, nps, art, mirrored
@@ -604,9 +617,10 @@ static Servant makeLancerDiarmuid() {
 
     std::string mirrored = mirrorAscii(art);
 
+    // Kayneth El-Melloi Archibald → Lancer (Diarmuid)
     return Servant(
         "Lancer (Diarmuid)",
-        "Diarmuid Ua Duibhne",
+        "Kayneth El-Melloi Archibald",
         "Knight of the love spot, bearing twin spears.",
         Series::Zero,
         150, 24, 17, 24, nps, art, mirrored
@@ -633,9 +647,10 @@ static Servant makeBerserkerLancelot() {
 
     std::string mirrored = mirrorAscii(art);
 
+    // Kariya Matou → Berserker (Lancelot)
     return Servant(
         "Berserker (Lancelot)",
-        "Lancelot du Lac",
+        "Kariya Matou",
         "Knight consumed by blackened madness.",
         Series::Zero,
         185, 27, 20, 18, nps, art, mirrored
@@ -655,16 +670,17 @@ static Servant makeAssassinHassanZero() {
         ASH           "               | /" BRIGHT_BLACK " ___ " ASH "\\ |\n"
         ASH           "               |/" BRIGHT_BLACK " /   \\ " ASH "\\|\n"
         BRIGHT_BLACK  "               |  |" ASH "___" BRIGHT_BLACK "|  |\n"
-        BRIGHT_BLACK  "               |  |" ASH "|||" BRIGHT_BLACK "|  |\n"
+        BRIGHT_BLACK  "               |  |" ASH "||| " BRIGHT_BLACK "|  |\n"
         BRIGHT_BLACK  "               |__|" ASH "___" BRIGHT_BLACK "|__|\n"
         BRIGHT_BLACK  "                 /_/ \\_\\\n"
         RESET;
 
     std::string mirrored = mirrorAscii(art);
 
+    // Kirei Kotomine → Assassin (Hassan-i Sabbah) in Zero
     return Servant(
         "Assassin (Hassan Zero)",
-        "Hassan-i Sabbah",
+        "Kirei Kotomine",
         "Hundred-faced assassin unleashed in a prior war.",
         Series::Zero,
         140, 22, 15, 25, nps, art, mirrored

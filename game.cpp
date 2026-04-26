@@ -65,8 +65,6 @@ static int visibleLen(const std::string& s) {
         if (c == '\033')        esc = true;
         else if (esc && c=='m') esc = false;
         else if (!esc) {
-            // Count UTF-8 multibyte start bytes as 1 visible char each;
-            // continuation bytes (10xxxxxx) are skipped
             if ((unsigned char)c < 0x80 || (unsigned char)c >= 0xC0) ++len;
         }
     }
@@ -89,21 +87,19 @@ static std::vector<std::string> splitLines(const std::string& s) {
     return lines;
 }
 
-// Repeat a string n times
 static std::string rep(const std::string& s, int n) {
     std::string out; for (int i = 0; i < n; i++) out += s; return out;
 }
 
-// FGO-style horizontal rule: ── TITLE ──────────────
+// FGO-style horizontal rule
 static std::string fgoRule(const std::string& title, int totalW, const std::string& col) {
     int tv = visibleLen(title);
-    int sides = totalW - tv - 2; // 1 space each side
+    int sides = totalW - tv - 2;
     int left  = sides / 2;
     int right = sides - left;
     return col + rep(BD_H, left) + " " + C_WHITE + title + col + " " + rep(BD_H, right) + C_RESET;
 }
 
-// FGO stat rank bar (A/B/C/D/E style with filled pips)
 static std::string rankBar(int val, int maxVal, int pips) {
     int filled = (maxVal > 0) ? (val * pips / maxVal) : 0;
     std::string bar = C_GOLD;
@@ -113,19 +109,85 @@ static std::string rankBar(int val, int maxVal, int pips) {
     return bar;
 }
 
-// Simple mapping from Master names to preferred servants (exact, case-insensitive)
+// Track which Holy Grail Wars have been cleared
+static bool g_zeroCleared = false;
+static bool g_stayCleared = false;
+
+static const char* seriesLabel(Series s) {
+    switch (s) {
+        case Series::Zero:      return "Fate/Zero";
+        case Series::StayNight: return "Fate/stay night";
+        default:                return "Unknown War";
+    }
+}
+
+// =============================================================================
+// Master-name → Servant + war mapping
+// =============================================================================
+
 static Servant servantForMasterName(const std::string& nameRaw) {
     std::string name;
-    for (char c : nameRaw) name += std::tolower(static_cast<unsigned char>(c));
+    name.reserve(nameRaw.size());
+    for (char c : nameRaw) {
+        if (!std::isspace(static_cast<unsigned char>(c)))
+            name += std::tolower(static_cast<unsigned char>(c));
+    }
 
-    if (name == "shirou" || name == "emiya shirou" || name == "emiya")
-        return Servant::randomServant(); // Shirou can end up with random for now
-    if (name == "rin" || name == "rin tohsaka" || name == "tohsaka")
-        return Servant::randomServant();
-    if (name == "kiritsugu" || name == "emiya kiritsugu")
-        return Servant::randomServant();
+    // Fifth Holy Grail War – Fate/stay night
+    if (name == "shirou" || name == "shirouemiya" || name == "emiyashirou") {
+        return Servant::selectServantForMaster("Shirou Emiya", Series::StayNight);
+    }
+    if (name == "rin" || name == "rintohsaka" || name == "tohsakarin") {
+        return Servant::selectServantForMaster("Rin Tohsaka", Series::StayNight);
+    }
+    if (name == "illya" || name == "illyasviel" ||
+        name == "illyasvielvoneinzbern" || name == "illyavoneinzbern") {
+        return Servant::selectServantForMaster("Illyasviel von Einzbern", Series::StayNight);
+    }
+    if (name == "sakura" || name == "sakuramatou" || name == "matousakura") {
+        return Servant::selectServantForMaster("Sakura Matou", Series::StayNight);
+    }
+    if (name == "shinji" || name == "shinjimatou" || name == "matoushinji") {
+        return Servant::selectServantForMaster("Shinji Matou", Series::StayNight);
+    }
+    if (name == "kuzuki" || name == "souichiroukuzuki" || name == "soichirokuzuki") {
+        return Servant::selectServantForMaster("Souichirou Kuzuki", Series::StayNight);
+    }
 
-    // Fallback
+    // Fourth Holy Grail War – Fate/Zero
+    if (name == "kiritsugu" || name == "kiritsuguemiya" || name == "emiyakiritsugu") {
+        return Servant::selectServantForMaster("Kiritsugu Emiya", Series::Zero);
+    }
+    if (name == "tokiomi" || name == "tokio mitohsaka" || name == "tokio mithosaka" ||
+        name == "tokio mithosaka") {
+        // handle simple "tokiomi" as well
+        return Servant::selectServantForMaster("Tokiomi Tohsaka", Series::Zero);
+    }
+    if (name == "kayneth" || name == "kaynethelmelloiarchibald" ||
+        name == "elmelloiarchibald" || name == "kaynetharchibald") {
+        return Servant::selectServantForMaster("Kayneth El-Melloi Archibald", Series::Zero);
+    }
+    if (name == "waver" || name == "wavervelvet") {
+        return Servant::selectServantForMaster("Waver Velvet", Series::Zero);
+    }
+    if (name == "ryuunosuke" || name == "ryunosuke" ||
+        name == "ryuunosukeuryuu" || name == "ryunosukeuryuu") {
+        return Servant::selectServantForMaster("Ryuunosuke Uryuu", Series::Zero);
+    }
+    if (name == "kariya" || name == "kariyamatou" || name == "matoukariya") {
+        return Servant::selectServantForMaster("Kariya Matou", Series::Zero);
+    }
+
+    // Kirei Kotomine – random between the two wars
+    if (name == "kirei" || name == "kireikotomine" || name == "kotominekirei") {
+        if (std::rand() % 2 == 0) {
+            return Servant::selectServantForMaster("Kirei Kotomine", Series::StayNight);
+        } else {
+            return Servant::selectServantForMaster("Kirei Kotomine", Series::Zero);
+        }
+    }
+
+    // Fallback: completely random servant from any war
     return Servant::randomServant();
 }
 
@@ -178,37 +240,103 @@ void Game::generateRandomInventory() {
 }
 
 // =============================================================================
+// Servant showcase screen
+// =============================================================================
+
+void Game::showServantProfile(const Servant& sv) {
+    while (true) {
+        printf("\033[2J"); printf("\033[H"); fflush(stdout);
+
+        cout << C_GOLD << fgoRule("SERVANT SUMMONED", 72, C_DGOLD) << C_RESET << "\n\n";
+
+        bool isZero = (sv.getSeries() == Series::Zero);
+        string seriesBadge = isZero
+            ? (C_RED "\u2605 Fate/Zero" C_RESET)
+            : (std::string(C_BLUE) + "\u2605 Fate/stay night" + C_RESET);
+
+        cout << " " C_GOLD "\u2694  " C_WHITE << sv.getName() << C_RESET << "\n";
+        cout << "    " << seriesBadge << "\n\n";
+
+        for (auto& line : splitLines(sv.getAsciiArt()))
+            cout << " " << line << "\n";
+
+        cout << "\n" C_DIM << rep(BD_H, 72) << C_RESET << "\n";
+
+        int bHP  = sv.getMaxHP();
+        int bSTR = sv.getStrength();
+        int bDUR = sv.getDurability();
+        int bAGI = sv.getAgility();
+
+        const int MAX_HP   = 220;
+        const int MAX_STAT = 32;
+
+        auto statLine = [&](const string& lbl, int val, int maxV) {
+            cout << C_DIM " " << BD_V << "  " C_SILVER << lbl << C_RESET
+                 << " " C_WHITE << val << C_RESET
+                 << "  " << rankBar(val, maxV, 8) << "\n";
+        };
+
+        cout << C_DGOLD << fgoRule("STATUS", 32, C_DIM) << C_RESET << "\n";
+        statLine("HP : ", bHP,  MAX_HP);
+        statLine("STR: ", bSTR, MAX_STAT);
+        statLine("DUR: ", bDUR, MAX_STAT);
+        statLine("AGI: ", bAGI, MAX_STAT);
+
+        const auto& nps = sv.getNPs();
+        if (!nps.empty()) {
+            cout << "\n" << C_DGOLD << fgoRule("NOBLE PHANTASMS", 40, C_DIM) << C_RESET << "\n";
+            for (std::size_t i = 0; i < nps.size(); ++i) {
+                const auto& np = nps[i];
+                cout << C_LGOLD "  [" << (i + 1) << "] " << np.name << C_RESET << "\n";
+                cout << C_DIM   "      Dmg: " C_BRED << np.baseDamage
+                     << C_DIM "  Scale: " C_ORANGE << np.damageScale << "x" C_RESET << "\n";
+                cout << C_SILVER "      " << np.description << C_RESET << "\n\n";
+            }
+        }
+
+        cout << C_DIM << rep(BD_H, 72) << C_RESET << "\n";
+        cout << C_DIM "  Press any key to continue..." C_RESET << "\n";
+        getSingleChar();
+        return;
+    }
+}
+
+// =============================================================================
 // Naming screen (before main menu)
 // =============================================================================
 
 void Game::showNamingScreen() {
     std::string input;
+    const int FRAME_W = 53;
+
     while (true) {
         printf("\033[2J"); printf("\033[H"); fflush(stdout);
 
-        cout << C_GOLD BD_DTL << rep(BD_DH, 46) << BD_DTR C_RESET << "\n";
-        cout << C_GOLD BD_DV C_LGOLD "           ❁  MASTER REGISTRATION  ❁           "
+        cout << C_GOLD BD_DTL << rep(BD_DH, FRAME_W) << BD_DTR C_RESET << "\n";
+        cout << C_GOLD BD_DV
+             << C_LGOLD "           ❁  MASTER REGISTRATION  ❁                 "
              << C_GOLD BD_DV C_RESET << "\n";
-        cout << C_GOLD BD_DLT << rep(BD_DH, 46) << BD_DRT C_RESET << "\n";
+        cout << C_GOLD BD_DLT << rep(BD_DH, FRAME_W) << BD_DRT C_RESET << "\n";
 
-        cout << C_GOLD BD_DV C_DIM
-             "  Enter your name as a Master of the Holy Grail War.   "
+        cout << C_GOLD BD_DV << C_DIM
+             "  Enter your name as a Master of the Holy Grail War. "
              << C_GOLD BD_DV C_RESET << "\n";
-        cout << C_GOLD BD_DV C_DIM
-             "  Certain names may call forth particular Servants...  "
+        cout << C_GOLD BD_DV << C_DIM
+             "  Certain names may call forth particular Servants..."
              << C_GOLD BD_DV C_RESET << "\n";
-        cout << C_GOLD BD_DLT << rep(BD_DH, 46) << BD_DRT C_RESET << "\n";
+        cout << C_GOLD BD_DLT << rep(BD_DH, FRAME_W) << BD_DRT C_RESET << "\n";
 
-        cout << C_GOLD BD_DV << C_WHITE "  Name: " C_CYAN << input << C_DIM "_" C_RESET;
+        cout << C_GOLD BD_DV << C_WHITE "  Name: " << C_CYAN << input << C_DIM << "_"
+             << C_RESET;
         int used = 8 + (int)input.size();
-        for (int i = used; i < 46; ++i) cout << ' ';
+        for (int i = used; i < FRAME_W; ++i) cout << ' ';
         cout << C_GOLD BD_DV C_RESET << "\n";
 
-        cout << C_GOLD BD_DLT << rep(BD_DH, 46) << BD_DRT C_RESET << "\n";
-        cout << C_GOLD BD_DV C_DIM
-             "  Enter - Confirm     Esc - Random name & servant   "
+        cout << C_GOLD BD_DLT << rep(BD_DH, FRAME_W) << BD_DRT C_RESET << "\n";
+        cout << C_GOLD BD_DV << C_DIM
+             "  Enter - Confirm     Esc - Random name & servant    "
              << C_GOLD BD_DV C_RESET << "\n";
-        cout << C_GOLD BD_DBL << rep(BD_DH, 46) << BD_DBR C_RESET << "\n";
+        cout << C_GOLD BD_DBL << rep(BD_DH, FRAME_W) << BD_DBR C_RESET << "\n";
 
         int key = (int)getSingleChar();
         if (key == 10 || key == 13) { // Enter
@@ -216,14 +344,16 @@ void Game::showNamingScreen() {
                 masterName = input;
                 Servant chosen = servantForMasterName(input);
                 player->setServant(chosen);
+                showServantProfile(chosen);
                 return;
             }
         } else if (key == 27) { // Esc
             masterName = "";
             Servant chosen = Servant::randomServant();
             player->setServant(chosen);
+            showServantProfile(chosen);
             return;
-        } else if (key == 127 || key == 8) { // Backspace
+        } else if (key == 127 || key == 8) {
             if (!input.empty()) input.pop_back();
         } else if (key >= 32 && key <= 126) {
             if ((int)input.size() < 24)
@@ -233,35 +363,164 @@ void Game::showNamingScreen() {
 }
 
 // =============================================================================
-// Main Menu  —  FGO command-room style
+// Renaming screen for second Holy Grail War
+// =============================================================================
+
+void Game::showRenamingScreen() {
+    std::string input;
+    const int FRAME_W = 53;
+
+    while (true) {
+        printf("\033[2J"); printf("\033[H"); fflush(stdout);
+
+        cout << C_GOLD BD_DTL << rep(BD_DH, FRAME_W) << BD_DTR C_RESET << "\n";
+        cout << C_GOLD BD_DV
+             << C_LGOLD "      ❁  NEW MASTER REGISTRATION  ❁            "
+             << C_GOLD BD_DV C_RESET << "\n";
+        cout << C_GOLD BD_DLT << rep(BD_DH, FRAME_W) << BD_DRT C_RESET << "\n";
+
+        cout << C_GOLD BD_DV << C_DIM
+             "  You are summoned to a new Holy Grail War.        "
+             << C_GOLD BD_DV C_RESET << "\n";
+        cout << C_GOLD BD_DV << C_DIM
+             "  Enter your name as this war's new Master.       "
+             << C_GOLD BD_DV C_RESET << "\n";
+        cout << C_GOLD BD_DLT << rep(BD_DH, FRAME_W) << BD_DRT C_RESET << "\n";
+
+        cout << C_GOLD BD_DV << C_WHITE "  Name: " << C_CYAN << input << C_DIM << "_"
+             << C_RESET;
+        int used = 8 + (int)input.size();
+        for (int i = used; i < FRAME_W; ++i) cout << ' ';
+        cout << C_GOLD BD_DV C_RESET << "\n";
+
+        cout << C_GOLD BD_DLT << rep(BD_DH, FRAME_W) << BD_DRT C_RESET << "\n";
+        cout << C_GOLD BD_DV << C_DIM
+             "  Enter - Confirm     Esc - Keep name             "
+             << C_GOLD BD_DV C_RESET << "\n";
+        cout << C_GOLD BD_DBL << rep(BD_DH, FRAME_W) << BD_DBR C_RESET << "\n";
+
+        int key = (int)getSingleChar();
+        if (key == 10 || key == 13) { // Enter
+            if (!input.empty()) masterName = input;
+            showServantProfile(*player->getServant());
+            return;
+        } else if (key == 27) {
+            showServantProfile(*player->getServant());
+            return;
+        } else if (key == 127 || key == 8) {
+            if (!input.empty()) input.pop_back();
+        } else if (key >= 32 && key <= 126) {
+            if ((int)input.size() < 24)
+                input += static_cast<char>(key);
+        }
+    }
+}
+
+// =============================================================================
+// Enemy gallery – FSN on left, Zero on right, defeated in red
+// =============================================================================
+
+void Game::showEnemyGallery() {
+    printf("\033[2J"); printf("\033[H"); fflush(stdout);
+
+    const int LEFT_W  = 34;
+    const int RIGHT_W = 34;
+
+    cout << C_GOLD << fgoRule("HOLY GRAIL WAR ROSTER", LEFT_W + RIGHT_W + 4, C_DGOLD)
+         << C_RESET << "\n\n";
+
+    auto stay = Servant::enemyPoolForSeries(Series::StayNight);
+    auto zero = Servant::enemyPoolForSeries(Series::Zero);
+
+    string leftHeader  = string(" ") + C_LGOLD "Fate/stay night" C_RESET;
+    string rightHeader = string(" ") + C_LGOLD "Fate/Zero" C_RESET;
+
+    cout << padRight(leftHeader,  LEFT_W)
+         << "  "
+         << padRight(rightHeader, RIGHT_W) << "\n";
+
+    cout << padRight(string(" ") + C_DIM + rep(BD_H, LEFT_W - 2)  + C_RESET, LEFT_W)
+         << "  "
+         << padRight(string(" ") + C_DIM + rep(BD_H, RIGHT_W - 2) + C_RESET, RIGHT_W)
+         << "\n\n";
+
+    int rows = (int)std::max(stay.size(), zero.size());
+
+    for (int i = 0; i < rows; ++i) {
+        std::string leftName, leftMaster;
+        std::string rightName, rightMaster;
+
+        if (i < (int)stay.size()) {
+            const Servant& sv = stay[i];
+            bool defeated = (defeatedEnemies.find(sv.getName()) != defeatedEnemies.end());
+
+            if (defeated)
+                leftName = std::string(" ") + C_RED + sv.getName() + " [DEFEATED]" + C_RESET;
+            else
+                leftName = std::string(" ") + C_GOLD + sv.getName() + C_RESET;
+
+            leftMaster = std::string(" ")
+                       + C_DIM "M: " C_CYAN + sv.getMasterName() + C_RESET;
+        }
+
+        if (i < (int)zero.size()) {
+            const Servant& sv = zero[i];
+            bool defeated = (defeatedEnemies.find(sv.getName()) != defeatedEnemies.end());
+
+            if (defeated)
+                rightName = std::string(" ") + C_RED + sv.getName() + " [DEFEATED]" + C_RESET;
+            else
+                rightName = std::string(" ") + C_GOLD + sv.getName() + C_RESET;
+
+            rightMaster = std::string(" ")
+                        + C_DIM "M: " C_CYAN + sv.getMasterName() + C_RESET;
+        }
+
+        cout << padRight(leftName,  LEFT_W)
+             << "  "
+             << padRight(rightName, RIGHT_W) << "\n";
+
+        cout << padRight(leftMaster,  LEFT_W)
+             << "  "
+             << padRight(rightMaster, RIGHT_W) << "\n\n";
+    }
+
+    cout << C_DIM "  Press any key to return..." C_RESET << "\n";
+    getSingleChar();
+}
+
+// =============================================================================
+// Main Menu
 // =============================================================================
 
 void Game::showMainMenu() {
     int sel = 0;
-    const int OPTIONS = 4;
+    const int OPTIONS = 5;
+    const int FRAME_W = 35;
+
     while (true) {
         printf("\033[2J"); printf("\033[H"); fflush(stdout);
 
-        // Header
-        cout << C_GOLD BD_DTL << rep(BD_DH, 31) << BD_DTR C_RESET << "\n";
-        cout << C_GOLD BD_DV C_LGOLD "  ⚔  HOLY GRAIL WAR  •  MASTER HQ  "
+        cout << C_GOLD BD_DTL << rep(BD_DH, FRAME_W) << BD_DTR C_RESET << "\n";
+        cout << C_GOLD BD_DV
+             << C_LGOLD "  ⚔  HOLY GRAIL WAR  •  MASTER HQ  "
              << C_GOLD BD_DV C_RESET << "\n";
-        cout << C_GOLD BD_DLT << rep(BD_DH, 31) << BD_DRT C_RESET << "\n";
+        cout << C_GOLD BD_DLT << rep(BD_DH, FRAME_W) << BD_DRT C_RESET << "\n";
 
         if (!masterName.empty()) {
-            cout << C_GOLD BD_DV C_DIM "  Master: " C_WHITE << masterName;
+            cout << C_GOLD BD_DV << C_DIM "  Master: " << C_WHITE << masterName;
             int used = 11 + (int)masterName.size();
-            for (int i = used; i < 31; ++i) cout << ' ';
+            for (int i = used; i < FRAME_W; ++i) cout << ' ';
             cout << C_GOLD BD_DV C_RESET << "\n";
-            cout << C_GOLD BD_DLT << rep(BD_DH, 31) << BD_DRT C_RESET << "\n";
+            cout << C_GOLD BD_DLT << rep(BD_DH, FRAME_W) << BD_DRT C_RESET << "\n";
         }
 
-        // Menu entries
         const char* labels[OPTIONS] = {
-            "  Inventory", "  Shop     ", "  Battle   ", "  Quit     "
+            "  Inventory  ", "  Shop     ", "  Battle   ", "  Gallery  ", "  Quit     "
         };
-        const char* icons[OPTIONS]  = { "\u2696", "\u2741", "\u2694", "\u00d7" };
-        const char* cols[OPTIONS]   = { C_CYAN, C_GOLD, C_BRED, C_DIM };
+        const char* icons[OPTIONS]  = { "\u2696", "\u2741", "\u2694", "\u24c8", "\u00d7" };
+        const char* cols[OPTIONS]   = { C_CYAN, C_GOLD, C_BRED, C_MGENTA, C_DIM };
+
         for (int i = 0; i < OPTIONS; i++) {
             bool active = (i == sel);
             std::string prefix = active
@@ -271,20 +530,20 @@ void Game::showMainMenu() {
                  << cols[i] << icons[i] << "  "
                  << (active ? C_WHITE : C_DIM)
                  << labels[i];
-            // pad
+
             int used = 8 + (int)string(labels[i]).size();
-            for (int s = used; s < 30; s++) cout << ' ';
+            for (int s = used; s < FRAME_W; ++s) cout << ' ';
+
             cout << C_GOLD << BD_DV << C_RESET << "\n";
         }
 
-        // Footer
-        cout << C_GOLD BD_DLT << rep(BD_DH, 31) << BD_DRT C_RESET << "\n";
-        cout << C_GOLD BD_DV C_DIM " Gold: " C_GOLD
+        cout << C_GOLD BD_DLT << rep(BD_DH, FRAME_W) << BD_DRT C_RESET << "\n";
+        cout << C_GOLD BD_DV << C_DIM " Gold: " << C_GOLD
              << shop->getPlayerGold() << "g";
-        int gl = (int)std::to_string(shop->getPlayerGold()).size() + 7;
-        for (int i = gl; i < 30; i++) cout << ' ';
+        int gl = (int)std::to_string(shop->getPlayerGold()).size() + 8;
+        for (int i = gl; i < FRAME_W; ++i) cout << ' ';
         cout << C_GOLD BD_DV C_RESET << "\n";
-        cout << C_GOLD BD_DBL << rep(BD_DH, 31) << BD_DBR C_RESET << "\n";
+        cout << C_GOLD BD_DBL << rep(BD_DH, FRAME_W) << BD_DBR C_RESET << "\n";
         cout << C_DIM "  W/S navigate  " BD_V "  Enter select  " BD_V "  Esc quit" C_RESET << "\n";
 
         int key = (int)getSingleChar();
@@ -295,6 +554,7 @@ void Game::showMainMenu() {
                 if      (sel == 0) play();
                 else if (sel == 1) playShop();
                 else if (sel == 2) playBattleArena();
+                else if (sel == 3) showEnemyGallery();
                 else               return;
                 break;
             case 127: case 27: return;
@@ -330,34 +590,34 @@ void Game::showSellConfirmScreen(Item* item, int row, int col) {
     if (!item) return;
     int pct       = 80 + (std::rand() % 11);
     int sellPrice = (item->getPrice() * pct) / 100;
+    const int FRAME_W = 46;
+
     while (true) {
         printf("\033[2J"); printf("\033[H"); fflush(stdout);
 
-        cout << C_DGOLD BD_DTL << rep(BD_DH, 46) << BD_DTR C_RESET << "\n";
+        cout << C_DGOLD BD_DTL << rep(BD_DH, FRAME_W) << BD_DTR C_RESET << "\n";
         cout << C_DGOLD BD_DV C_GOLD "            ❁  SELL ITEM?  ❁            "
              << C_DGOLD BD_DV C_RESET << "\n";
-        cout << C_DGOLD BD_DLT << rep(BD_DH, 46) << BD_DRT C_RESET << "\n";
+        cout << C_DGOLD BD_DLT << rep(BD_DH, FRAME_W) << BD_DRT C_RESET << "\n";
 
-        auto printRow = [](const string& lbl, const string& val, const string& vc) {
-            cout << C_DGOLD BD_DV C_DIM "  " C_SILVER << lbl
-                 << vc << val;
-            int used = 4 + (int)lbl.size() + (int)val.size();
-            for (int i = used; i < 45; i++) cout << ' ';
-            cout << C_DGOLD BD_DV C_RESET << "\n";
+        auto printRow = [&](const string& lbl, const string& val, const string& vc) {
+            string content = string("  ") + C_SILVER + lbl + vc + val + C_RESET;
+            cout << C_DGOLD BD_DV << padRight(content, FRAME_W - 1)
+                 << C_DGOLD BD_DV C_RESET << "\n";
         };
 
         printRow("Item:   ", item->getName(),                        C_WHITE);
         printRow("Type:   ", Item::typeToString(item->getType()),    C_CYAN);
         printRow("Worth:  ", std::to_string(item->getPrice()) + "g", C_GOLD);
         printRow("Sell:   ", std::to_string(sellPrice) + "g (" +
-                             std::to_string(pct) + "%)",             C_GREEN);
+                               std::to_string(pct) + "%)",           C_GREEN);
 
-        cout << C_DGOLD BD_DLT << rep(BD_DH, 46) << BD_DRT C_RESET << "\n";
+        cout << C_DGOLD BD_DLT << rep(BD_DH, FRAME_W) << BD_DRT C_RESET << "\n";
         cout << C_DGOLD BD_DV C_DIM
              "     " C_GREEN "Y" C_DIM " - Confirm sell   "
              BD_V "   " C_RED "N / Esc" C_DIM " - Cancel    "
              << C_DGOLD BD_DV C_RESET << "\n";
-        cout << C_DGOLD BD_DBL << rep(BD_DH, 46) << BD_DBR C_RESET << "\n";
+        cout << C_DGOLD BD_DBL << rep(BD_DH, FRAME_W) << BD_DBR C_RESET << "\n";
 
         int key = (int)getSingleChar();
         if (key == 'y' || key == 'Y') {
@@ -581,27 +841,23 @@ void Game::sellItemsMenu() {
 }
 
 // =============================================================================
-// INVENTORY SCREEN  —  FGO / Visual Novel Style
+// INVENTORY SCREEN
 // =============================================================================
 
-// Helper: render one NP card in the right panel
 static void pushNPCard(vector<string>& panel, std::size_t idx,
                        const NoblePhantasm& np, bool available, int panelW) {
-    // Title line
     std::string avail = available ? (C_GOLD "\u25cf READY") : (C_DIM "\u25cb USED");
     panel.push_back(
         C_DIM " " + std::string(BD_TL) + rep(BD_H, 3) + C_RESET +
         " " C_LGOLD + np.name + C_RESET +
         "  " + avail + C_RESET
     );
-    // Stats line: Base DMG / Scale
     panel.push_back(
         C_DIM "  " + std::string(BD_V) + "  "
         C_DIM "Dmg: " C_BRED + std::to_string(np.baseDamage) +
         C_DIM "  Scale: " C_ORANGE + std::to_string((int)(np.damageScale * 10)) + "x" +
         C_RESET
     );
-    // Description — word-wrap to ~panelW - 5 chars
     int wrapW = panelW - 5;
     std::string desc = np.description;
     while ((int)desc.size() > wrapW) {
@@ -629,10 +885,8 @@ void Game::play() {
         Inventory* inv = player->getInventory();
         bool inEquip   = (inv->getCurrentCol() >= 3);
 
-        // ── LEFT PANEL ──────────────────────────────────────────────────
         vector<string> left;
 
-        // Header bar
         left.push_back(
             C_GOLD " ❁ " C_WHITE "INVENTORY" C_GOLD "  │  "
             C_DIM "Gold: " C_GOLD + std::to_string(shop->getPlayerGold()) + "g"
@@ -642,7 +896,6 @@ void Game::play() {
         left.push_back(C_DIM + rep(BD_H, LEFT_W) + C_RESET);
         left.push_back("");
 
-        // Bag + Equip grids
         auto bagLines   = inv->renderBagLines();
         auto equipLines = inv->renderEquipLines();
         int  gridRows   = (int)std::max(bagLines.size(), equipLines.size());
@@ -653,7 +906,6 @@ void Game::play() {
         }
         left.push_back("");
 
-        // Item info panel
         Item* cur = inv->getCurrentItem();
         if (showItemInfo) {
             left.push_back(C_DIM + rep(BD_H, LEFT_W) + C_RESET);
@@ -665,13 +917,12 @@ void Game::play() {
                 left.push_back(C_DIM "  Type:   " C_SILVER + Item::typeToString(cur->getType()) + C_RESET);
                 left.push_back(C_DIM "  Rarity: " C_CYAN   + Item::rarityToString(cur->getRarity()) + C_RESET);
                 left.push_back(C_DIM "  Price:  " C_GOLD   + std::to_string(cur->getPrice()) + "g" + C_RESET);
-                left.push_back(C_DIM "  Effect: " C_GREEN  + "+" + std::to_string(cur->getPercentValue()) + "%" + C_RESET);
+                left.push_back(C_DIM "  Effect: " C_GREEN  "+" + std::to_string(cur->getPercentValue()) + "%" + C_RESET);
             } else {
                 left.push_back(C_DIM "  [empty slot]" C_RESET);
             }
         }
 
-        // Controls hint
         left.push_back("");
         left.push_back(C_DIM + rep(BD_H, LEFT_W) + C_RESET);
         if (inv->getIsDragging()) {
@@ -692,10 +943,8 @@ void Game::play() {
                 C_DIM "Bksp" C_SILVER "-Menu" C_RESET);
         }
 
-        // ── RIGHT PANEL ─────────────────────────────────────────────────
         vector<string> right;
 
-        // Servant name + series badge
         bool isZero = (sv->getSeries() == Series::Zero);
         string seriesBadge = isZero
             ? (C_RED "\u2605 Fate/Zero" C_RESET)
@@ -705,18 +954,15 @@ void Game::play() {
         right.push_back(" " C_DIM + rep(BD_H, 30) + C_RESET);
         right.push_back("");
 
-        // ASCII art
         for (auto& al : splitLines(sv->getAsciiArt()))
             right.push_back(" " + al);
 
-        // Stats panel
         if (showStats) {
             int bHP  = sv->getMaxHP(),     eHP  = player->getEffectiveMaxHP();
             int bSTR = sv->getStrength(),   eSTR = player->getEffectiveStrength();
             int bDUR = sv->getDurability(), eDUR = player->getEffectiveDurability();
             int bAGI = sv->getAgility(),    eAGI = player->getEffectiveAgility();
 
-            // Reference maxima for rank bars
             const int MAX_HP  = 220;
             const int MAX_STAT = 32;
 
@@ -737,7 +983,6 @@ void Game::play() {
             right.push_back(statLine("DUR: ", bDUR, eDUR, MAX_STAT));
             right.push_back(statLine("AGI: ", bAGI, eAGI, MAX_STAT));
 
-            // Noble Phantasm cards
             const auto& nps = sv->getNPs();
             if (!nps.empty()) {
                 right.push_back("");
@@ -749,7 +994,6 @@ void Game::play() {
             }
         }
 
-        // ── PRINT SIDE BY SIDE ───────────────────────────────────────────
         int maxRows = (int)std::max(left.size(), right.size());
         for (int i = 0; i < maxRows; i++) {
             string l = (i < (int)left.size())  ? left[i]  : "";
@@ -803,7 +1047,7 @@ void Game::play() {
 }
 
 // =============================================================================
-// Battle Arena  —  FGO duel style, widened layout and richer colours
+// Battle Arena – dual-war flow, bigger arena
 // =============================================================================
 
 void Game::playBattleArena() {
@@ -825,10 +1069,41 @@ void Game::playBattleArena() {
         cout << C_DIM "  A grand arena manifests between two opposing heroes..." C_RESET << "\n\n";
 
         if (pool.empty()) {
-            cout << C_GOLD "  All servants of this war have been defeated!" C_RESET << "\n";
-            cout << C_DIM "  You stand as the final Master." C_RESET << "\n\n";
-            cout << C_DIM "  Press any key to return..." C_RESET << "\n";
-            getSingleChar(); return;
+            Series curSeries = myServant->getSeries();
+            if (curSeries == Series::Zero)      g_zeroCleared = true;
+            else if (curSeries == Series::StayNight) g_stayCleared = true;
+
+            cout << C_GOLD "  All servants of this Holy Grail War have been defeated!"
+                 << C_RESET << "\n";
+            cout << C_DIM "  You stand as the final Master of " C_LGOLD
+                 << seriesLabel(curSeries) << C_DIM "." C_RESET << "\n\n";
+
+            if (g_zeroCleared && g_stayCleared) {
+                cout << C_GOLD "  You have conquered both Holy Grail Wars." C_RESET << "\n";
+                cout << C_DIM  "  No more Masters remain to challenge you." C_RESET << "\n\n";
+                cout << C_DIM  "  Press any key to return to HQ..." C_RESET << "\n";
+                getSingleChar();
+                return;
+            }
+
+            Series nextSeries =
+                (curSeries == Series::Zero) ? Series::StayNight : Series::Zero;
+
+            cout << C_LGOLD "  A new Holy Grail War stirs..." C_RESET << "\n";
+            cout << C_DIM   "  You will enter " C_LGOLD << seriesLabel(nextSeries)
+                 << C_DIM " as a new Master with a new Servant." C_RESET << "\n\n";
+            cout << C_DIM   "  Press any key to accept this calling..." C_RESET << "\n";
+            getSingleChar();
+
+            auto nextPool = Servant::enemyPoolForSeries(nextSeries);
+            if (!nextPool.empty()) {
+                Servant nextServant = nextPool[std::rand() % (int)nextPool.size()];
+                player->setServant(nextServant);
+            }
+
+            defeatedEnemies.clear();
+            showRenamingScreen();
+            return;
         }
 
         cout << C_DIM "  Remaining enemies: " C_WHITE << pool.size() << C_RESET << "\n";
@@ -862,71 +1137,78 @@ bool Game::battleOneEnemy(Enemy& enemy) {
     while (pHP > 0 && eHP > 0) {
         printf("\033[2J"); printf("\033[H"); fflush(stdout);
 
-        auto hpBar = [](int hp, int maxHp, int w, const std::string& colMain, const std::string& colDim) -> string {
+        auto hpBar = [](int hp, int maxHp, int w,
+                        const std::string& colMain,
+                        const std::string& colDim) -> std::string {
             int filled = (maxHp > 0) ? (hp * w / maxHp) : 0;
-            string bar = colMain;
+            std::string bar = colMain;
             for (int i = 0; i < w; i++)
                 bar += (i < filled) ? "\u2588" : (colDim + "\u2591" + colMain);
             bar += C_RESET;
             return bar;
         };
 
-        // Side-by-side layout width
         const int PANEL_W = 36;
+        const int ARENA_W = PANEL_W * 2 + 8;
 
-        // Player header bar (left)
-        string pHeaderTop    = std::string(C_BLUE) + "\u2554" + rep(BD_DH, PANEL_W) + "\u2557" + C_RESET;
-        string pHeaderName   = string(C_BLUE "\u2551 ") + C_WHITE + padRight(myServant->getName(), 18)
-                             + C_DIM "HP: " C_GREEN + std::to_string(pHP) + "/" + std::to_string(pMaxHP);
-        int    pPad          = PANEL_W - 2 - 18 - 4
-                             - (int)std::to_string(pHP).size() - 1
-                             - (int)std::to_string(pMaxHP).size();
+        string pHeaderTop =
+            string(C_BLUE) + "\u2554" + rep(BD_DH, PANEL_W) + "\u2557" + C_RESET;
+        string pHeaderName =
+            string(C_BLUE "\u2551 ") + C_WHITE + padRight(myServant->getName(), 18)
+            + C_DIM "HP: " C_GREEN + std::to_string(pHP) + "/" + std::to_string(pMaxHP);
+        int pPad = PANEL_W - 2 - 18 - 4
+                 - (int)std::to_string(pHP).size() - 1
+                 - (int)std::to_string(pMaxHP).size();
         if (pPad < 0) pPad = 0;
         pHeaderName += string(pPad, ' ') + C_BLUE " \u2551" C_RESET;
-        string pHeaderHpBar  = string(C_BLUE "\u2551 ") + hpBar(pHP, pMaxHP, PANEL_W - 4, C_GREEN, C_DIM) + C_BLUE " \u2551" C_RESET;
-        string pHeaderBottom = string(C_BLUE "\u255a") + rep(BD_DH, PANEL_W) + "\u255d" C_RESET;
+        string pHeaderHpBar =
+            string(C_BLUE "\u2551 ") + hpBar(pHP, pMaxHP, PANEL_W - 4, C_GREEN, C_DIM)
+            + C_BLUE " \u2551" C_RESET;
+        string pHeaderBottom =
+            string(C_BLUE "\u255a") + rep(BD_DH, PANEL_W) + "\u255d" C_RESET;
 
-        // Enemy header bar (right)
-        string eHeaderTop    = std::string(C_RED) + "\u2554" + rep(BD_DH, PANEL_W) + "\u2557" + C_RESET;
-        string eHeaderName   = string(C_RED "\u2551 ") + C_WHITE + padRight(en.getName(), 18)
-                             + C_DIM "HP: " C_BRED + std::to_string(eHP) + "/" + std::to_string(en.getMaxHP());
-        int    ePad          = PANEL_W - 2 - 18 - 4
-                             - (int)std::to_string(eHP).size() - 1
-                             - (int)std::to_string(en.getMaxHP()).size();
+        string eHeaderTop =
+            string(C_RED) + "\u2554" + rep(BD_DH, PANEL_W) + "\u2557" + C_RESET;
+        string eHeaderName =
+            string(C_RED "\u2551 ") + C_WHITE + padRight(en.getName(), 18)
+            + C_DIM "HP: " C_BRED + std::to_string(eHP) + "/" + std::to_string(en.getMaxHP());
+        int ePad = PANEL_W - 2 - 18 - 4
+                 - (int)std::to_string(eHP).size() - 1
+                 - (int)std::to_string(en.getMaxHP()).size();
         if (ePad < 0) ePad = 0;
         eHeaderName += string(ePad, ' ') + C_RED " \u2551" C_RESET;
-        string eHeaderHpBar  = string(C_RED "\u2551 ") + hpBar(eHP, en.getMaxHP(), PANEL_W - 4, C_ORANGE, C_DIM) + C_RED " \u2551" C_RESET;
-        string eHeaderBottom = string(C_RED "\u255a") + rep(BD_DH, PANEL_W) + "\u255d" C_RESET;
+        string eHeaderHpBar =
+            string(C_RED "\u2551 ") + hpBar(eHP, en.getMaxHP(), PANEL_W - 4, C_ORANGE, C_DIM)
+            + C_RED " \u2551" C_RESET;
+        string eHeaderBottom =
+            string(C_RED "\u255a") + rep(BD_DH, PANEL_W) + "\u255d" C_RESET;
 
-        // Collect player and enemy body lines from ASCII art
         vector<string> pBody, eBody;
         for (auto& al : splitLines(myServant->getAsciiArt()))
             pBody.push_back(al);
         for (auto& al : splitLines(en.getAsciiArt()))
             eBody.push_back(al);
-
         int maxBody = (int)std::max(pBody.size(), eBody.size());
 
-        // Top headers side-by-side
-        cout << padRight(pHeaderTop, PANEL_W + 4) << "  " << eHeaderTop << "\n";
-        cout << padRight(pHeaderName, PANEL_W + 4) << "  " << eHeaderName << "\n";
-        cout << padRight(pHeaderHpBar, PANEL_W + 4) << "  " << eHeaderHpBar << "\n";
-        cout << padRight(pHeaderBottom, PANEL_W + 4) << "  " << eHeaderBottom << "\n";
+        cout << padRight(pHeaderTop,   PANEL_W + 4) << "  " << eHeaderTop    << "\n";
+        cout << padRight(pHeaderName,  PANEL_W + 4) << "  " << eHeaderName   << "\n";
+        cout << padRight(pHeaderHpBar, PANEL_W + 4) << "  " << eHeaderHpBar  << "\n";
+        cout << padRight(pHeaderBottom,PANEL_W + 4) << "  " << eHeaderBottom << "\n";
 
-        // VS banner between them
-        cout << C_DIM << rep(BD_H, PANEL_W / 2) << C_ORANGE "  VS  "
-             << C_DIM << rep(BD_H, PANEL_W / 2) << C_RESET << "\n";
+        cout << C_DIM << rep(BD_H, PANEL_W / 2)
+             << C_ORANGE "  VS  "
+             << C_DIM << rep(BD_H, PANEL_W / 2)
+             << C_RESET << "\n";
 
-        // Body (ASCII art) side-by-side
         for (int i = 0; i < maxBody; ++i) {
             string pl = (i < (int)pBody.size()) ? pBody[i] : "";
             string el = (i < (int)eBody.size()) ? eBody[i] : "";
             cout << padRight(" " + pl, PANEL_W + 4) << "  " << " " << el << "\n";
         }
 
-        // Separator and action menu below the arena
-        cout << "\n" << C_DGOLD << rep(BD_H, PANEL_W * 2 + 8) << C_RESET << "\n";
+        cout << "\n" << C_DGOLD << rep(BD_H, ARENA_W) << C_RESET << "\n";
         cout << C_GOLD "  A" C_DIM " - Basic attack" C_RESET << "\n";
+
         const auto& nps = myServant->getNPs();
         for (std::size_t i = 0; i < nps.size(); ++i) {
             bool avail = myServant->isNPAvailable(i);
@@ -935,7 +1217,7 @@ bool Game::battleOneEnemy(Enemy& enemy) {
                  << C_DIM " [Dmg: " C_BRED << nps[i].baseDamage
                  << C_DIM " Scale: " C_ORANGE << nps[i].damageScale << "x"
                  << (avail ? "" : C_DIM "  (used)")
-                 << C_RESET "\n";
+                 << C_RESET << "\n";
         }
         cout << C_DIM "  E - Escape" C_RESET << "\n";
 
@@ -943,9 +1225,10 @@ bool Game::battleOneEnemy(Enemy& enemy) {
         bool usedTurn = false;
 
         if (key == 'e' || key == 'E') {
-            cout << C_DIM "\n  You fled from battle." C_RESET "\n  Press any key...\n";
-            getSingleChar(); return false;
-
+            cout << C_DIM "\n  You fled from battle." C_RESET "\n"
+                 << C_DIM "  Press any key..." C_RESET "\n";
+            getSingleChar();
+            return false;
         } else if (key == 'a' || key == 'A') {
             int hit = std::max(10, std::min(95, 75 + (pAgiEff - eAgiEff) * 2));
             if (std::rand() % 100 < hit) {
@@ -958,34 +1241,43 @@ bool Game::battleOneEnemy(Enemy& enemy) {
                 cout << "\n" C_DIM "  Your attack is deflected!" C_RESET "\n";
             }
             usedTurn = true;
-
         } else if (key >= '1' && key <= '9') {
             std::size_t ni = static_cast<std::size_t>(key - '1');
             if (ni < nps.size() && myServant->isNPAvailable(ni)) {
                 int hit = std::max(20, std::min(99, 85 + (pAgiEff - eAgiEff)));
-                // NP activation banner widened
-                cout << "\n" C_GOLD
-                     "  \u2554" << rep(BD_DH, PANEL_W * 2) << "\u2557" C_RESET "\n";
-                cout << C_GOLD "  \u2551" C_LGOLD;
+
+                cout << "\n"
+                     << C_GOLD << "  \u2554" << rep(BD_DH, ARENA_W) << "\u2557"
+                     << C_RESET << "\n";
+                cout << C_GOLD << "  \u2551" << C_LGOLD;
                 string title = "  NOBLE PHANTASM: " + nps[ni].name + "  ";
-                cout << padRight(title, PANEL_W * 2);
-                cout << C_GOLD "\u2551" C_RESET "\n";
-                cout << C_GOLD "  \u2551" C_DIM;
+                cout << padRight(title, ARENA_W);
+                cout << C_GOLD << "\u2551" << C_RESET << "\n";
+
+                cout << C_GOLD << "  \u2551" << C_DIM;
                 cout << padRight("  Dmg: " + std::to_string(nps[ni].baseDamage) +
-                                 "  Scale: " + std::to_string(nps[ni].damageScale) + "x", PANEL_W * 2);
-                cout << C_GOLD "\u2551" C_RESET "\n";
-                cout << C_GOLD "  \u2551" C_SILVER;
-                cout << padRight("  " + nps[ni].description, PANEL_W * 2);
-                cout << C_GOLD "\u2551" C_RESET "\n";
-                cout << C_GOLD "  \u255a" << rep(BD_DH, PANEL_W * 2) << "\u255d" C_RESET "\n";
+                                 "  Scale: " + std::to_string(nps[ni].damageScale) + "x",
+                                 ARENA_W);
+                cout << C_GOLD << "\u2551" << C_RESET << "\n";
+
+                cout << C_GOLD << "  \u2551" << C_SILVER;
+                cout << padRight("  " + nps[ni].description, ARENA_W);
+                cout << C_GOLD << "\u2551" << C_RESET << "\n";
+
+                cout << C_GOLD << "  \u255a" << rep(BD_DH, ARENA_W) << "\u255d"
+                     << C_RESET << "\n";
 
                 if (std::rand() % 100 < hit) {
-                    int dmg = myServant->noblePhantasmDamage(ni,
-                                  pStrEff - myServant->getStrength(), eDurEff / 2);
+                    int dmg = myServant->noblePhantasmDamage(
+                        ni,
+                        pStrEff - myServant->getStrength(),
+                        eDurEff / 2
+                    );
                     dmg /= 2; if (dmg < 12) dmg = 12;
                     eHP -= dmg; if (eHP < 0) eHP = 0;
                     myServant->markNPUsed(ni);
-                    cout << C_GOLD "  Hits for " C_BRED << dmg << C_GOLD " damage!" C_RESET "\n";
+                    cout << C_GOLD "  Hits for " C_BRED << dmg
+                         << C_GOLD " damage!" C_RESET "\n";
                 } else {
                     myServant->markNPUsed(ni);
                     cout << C_DIM "  The Noble Phantasm was neutralised!" C_RESET "\n";
@@ -994,35 +1286,45 @@ bool Game::battleOneEnemy(Enemy& enemy) {
             }
         }
 
-        if (!usedTurn) cout << "\n" C_DIM "  You hesitate — turn lost." C_RESET "\n";
+        if (!usedTurn) {
+            cout << "\n" C_DIM "  You hesitate — turn lost." C_RESET "\n";
+        }
 
         if (eHP <= 0) {
             cout << "\n" C_GREEN "  " << en.getName() << " has been defeated!" C_RESET "\n";
             cout << C_DIM "  Press any key..." C_RESET "\n";
-            getSingleChar(); return true;
+            getSingleChar();
+            return true;
         }
 
-        // Enemy turn
         cout << "\n" C_RED "  " << en.getName() << "'s turn..." C_RESET "\n";
-        bool enemyUsedNP = false;
-        const auto& eNPs = en.getNPs();
+        bool        enemyUsedNP = false;
+        const auto& eNPs        = en.getNPs();
         for (std::size_t i = 0; i < eNPs.size(); ++i) {
             if (en.isNPAvailable(i) && (std::rand() % 4 == 0)) {
                 int dmg = en.noblePhantasmDamage(i, 0, pDurEff / 2);
                 dmg /= 2; if (dmg < 12) dmg = 12;
                 pHP -= dmg; if (pHP < 0) pHP = 0;
                 en.markNPUsed(i);
-                cout << C_RED "  \u2554" << rep(BD_DH, PANEL_W * 2) << "\u2557" C_RESET "\n";
-                cout << C_RED "  \u2551" C_BRED;
+
+                cout << C_RED << "  \u2554" << rep(BD_DH, ARENA_W) << "\u2557"
+                     << C_RESET << "\n";
+                cout << C_RED << "  \u2551" << C_BRED;
                 string etitle = "  ENEMY NP: " + eNPs[i].name + "  ";
-                cout << padRight(etitle, PANEL_W * 2);
-                cout << C_RED "\u2551" C_RESET "\n";
-                cout << C_RED "  \u2551" C_SILVER;
-                cout << padRight("  " + eNPs[i].description, PANEL_W * 2);
-                cout << C_RED "\u2551" C_RESET "\n";
-                cout << C_RED "  \u255a" << rep(BD_DH, PANEL_W * 2) << "\u255d" C_RESET "\n";
-                cout << C_RED "  Deals " C_BRED << dmg << C_RED " damage to you!" C_RESET "\n";
-                enemyUsedNP = true; break;
+                cout << padRight(etitle, ARENA_W);
+                cout << C_RED << "\u2551" << C_RESET << "\n";
+
+                cout << C_RED << "  \u2551" << C_SILVER;
+                cout << padRight("  " + eNPs[i].description, ARENA_W);
+                cout << C_RED << "\u2551" << C_RESET << "\n";
+
+                cout << C_RED << "  \u255a" << rep(BD_DH, ARENA_W) << "\u255d"
+                     << C_RESET << "\n";
+                cout << C_RED "  Deals " C_BRED << dmg << C_RED " damage to you!"
+                     << C_RESET "\n";
+
+                enemyUsedNP = true;
+                break;
             }
         }
         if (!enemyUsedNP) {
@@ -1032,7 +1334,8 @@ bool Game::battleOneEnemy(Enemy& enemy) {
                 if (dmg < 3) dmg = 3;
                 pHP -= dmg; if (pHP < 0) pHP = 0;
                 cout << C_WHITE "  " << en.getName()
-                     << C_RED " strikes you for " C_BRED << dmg << C_RED " damage!" C_RESET "\n";
+                     << C_RED " strikes you for " C_BRED << dmg << C_RED " damage!"
+                     << C_RESET "\n";
             } else {
                 cout << C_DIM "  " << en.getName() << "'s attack misses!" C_RESET "\n";
             }
@@ -1041,7 +1344,8 @@ bool Game::battleOneEnemy(Enemy& enemy) {
         if (pHP <= 0) {
             cout << "\n" C_RED "  Your servant has fallen..." C_RESET "\n";
             cout << C_DIM "  Press any key..." C_RESET "\n";
-            getSingleChar(); return false;
+            getSingleChar();
+            return false;
         }
 
         cout << "\n" C_DIM "  Press any key for next round..." C_RESET "\n";
