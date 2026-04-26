@@ -15,6 +15,8 @@ private:
     ItemGenerator* itemGenerator;
     Shop*          shop;
 
+    std::string masterName;   // set in the naming screen
+
     std::set<std::string> defeatedEnemies;
 
     void playBattleArena();
@@ -23,6 +25,9 @@ private:
 public:
     Game();
     ~Game();
+
+    // First screen shown before the main menu
+    void showNamingScreen();
 
     void showMainMenu();
     void play();
