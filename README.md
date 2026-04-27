@@ -1,7 +1,7 @@
 # Software Requirements Specification
 ## for Terminal-Based Servant Battle Royale
 
-**Version:** 1.0 approved
+**Version:** 2.71 approved
 **Prepared by:** Franciszek Wasiak
 **Organization:** School Project
 **Created:** April 26, 2026

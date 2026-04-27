@@ -972,7 +972,8 @@ void Game::play() {
                     : "";
                 return C_DIM " " + string(BD_V) + "  " C_SILVER + lbl + C_RESET
                      + " " C_WHITE + std::to_string(base) + C_RESET
-                     + bonus + "  " + rankBar(eff, maxV, 8);
+                     + "  " + rankBar(eff, maxV, 8)
+                     + bonus;
             };
 
             right.push_back("");
