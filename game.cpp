@@ -1113,8 +1113,28 @@ void Game::playBattleArena() {
 
         int   idx = std::rand() % (int)pool.size();
         Enemy enemy(pool[idx]);
-        bool  won = battleOneEnemy(enemy);
-        if (won) defeatedEnemies.insert(enemy.getServant().getName());
+        bool won = battleOneEnemy(enemy);
+        if (won) {
+            defeatedEnemies.insert(enemy.getServant().getName());
+
+            // Calculate gold reward from enemy stats
+            const Servant& es = enemy.getServant();
+            int reward = 50 + es.getStrength() * 2 + es.getDurability() + (es.getMaxHP() / 10);
+            shop->addGold(reward);
+
+            // Victory reward screen
+            printf("\033[2J");
+            printf("\033[H");
+            fflush(stdout);
+            cout << C_GOLD << fgoRule("VICTORY", 72, C_DGOLD) << C_RESET << "\n\n";
+            cout << C_GOLD "  \u2694 " C_WHITE << es.getName()
+                 << C_GOLD " has been defeated!" C_RESET "\n\n";
+            cout << C_DIM "  Reward:   " C_GOLD << reward << "g" C_RESET "\n";
+            cout << C_DIM "  Treasury: " C_GOLD << shop->getPlayerGold() << "g"
+                 C_RESET "\n\n";
+            cout << C_DIM "  Press any key to continue..." C_RESET "\n";
+            getSingleChar();
+        }
     }
 }
 
