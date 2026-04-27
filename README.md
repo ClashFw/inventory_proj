@@ -1,534 +1,662 @@
 # Software Requirements Specification
-## for Terminal-Based Servant Battle Royale
 
-**Version:** 2.71 approved
-**Prepared by:** Franciszek Wasiak
-**Organization:** School Project
-**Created:** April 26, 2026
-**Repository:** https://github.com/ClashFw/inventory_proj
+Title: Holy Grail War — Terminal RPG
+Version: 1.0
+Prepared by: [Your Name]
+Organization: [Your Organization]
+Date: April 27, 2026
 
-***
+Presentation: https://gamma.app/docs/Terminal-Based-Servant-Battle-Royale-azwmq41nce7pymc
+
+---
 
 ## Revision History
 
-| Name              | Date | Reason For Changes | Version |
-|-------------------|---|---|---|
-| Franciszek Wasiak | April 26, 2026 | Initial release | 1.0 |
+Name         | Date       | Reason For Changes | Version
+-------------|------------|--------------------|--------
+[Your Name]  | 2026-04-27 | Initial SRS        | 1.0
 
-***
+---
+
+## Table of Contents
+
+1. Introduction
+   1.1 Purpose
+   1.2 Document Conventions
+   1.3 Intended Audience and Reading Suggestions
+   1.4 Product Scope
+   1.5 References
+2. Overall Description
+   2.1 Product Perspective
+   2.2 Product Functions
+   2.3 User Classes and Characteristics
+   2.4 Operating Environment
+   2.5 Design and Implementation Constraints
+   2.6 User Documentation
+   2.7 Assumptions and Dependencies
+3. External Interface Requirements
+   3.1 User Interfaces
+   3.2 Hardware Interfaces
+   3.3 Software Interfaces
+   3.4 Communications Interfaces
+4. System Use Cases
+5. Other Nonfunctional Requirements
+   5.1 Performance Requirements
+   5.2 Safety Requirements
+   5.3 Security Requirements
+   5.4 Software Quality Attributes
+   5.5 Business Rules
+6. Other Requirements
+7. System Requirements Chart
+   Appendix A: Glossary
+   Appendix B: Analysis Models
+   Appendix C: To Be Determined List
+
+---
 
 ## 1. Introduction
 
 ### 1.1 Purpose
 
-This document specifies the software requirements for *Terminal-Based Servant Battle Royale* (`inventory_proj`), version 1.0. It covers the complete system, including the Naming Screen, Inventory Management, Shop, and Battle Arena subsystems.
+This Software Requirements Specification describes the functional and
+non-functional requirements for the Holy Grail War Terminal RPG, version 1.0.
+The document guides development, testing, and maintenance of the system.
+It covers the complete feature set including Master registration, Servant
+summoning, inventory management, shop mechanics, turn-based battle, and
+dual Holy Grail War progression.
 
 ### 1.2 Document Conventions
 
-- **Bold** text is used for key terms defined in Appendix A: Glossary.
-- All requirements use "shall" to indicate mandatory behavior and "should" to indicate recommended behavior.
-- Requirements are assigned a unique ID (e.g., FR-01) and one of three priority levels: High, Medium, or Low.
-- Each requirement has its own explicitly stated priority; higher-level requirements do not automatically propagate priority downward.
+- Requirements are written in the form "The system shall...".
+- Priority levels used throughout: Low, Medium, High.
+- Functional requirements are tagged F, non-functional requirements tagged NF.
+- All keyboard shortcuts use the format KEY (e.g. W, S, Enter, Backspace).
+- ANSI escape codes and UTF-8 are assumed throughout for terminal rendering.
 
 ### 1.3 Intended Audience and Reading Suggestions
 
-| Reader | Recommended Sections |
-|---|---|
-| **Developers** | All sections, with emphasis on Sections 2, 3, 4, and the Requirements Chart |
-| **Testers** | Section 4 (Use Cases) and Section 5 (Nonfunctional Requirements) |
-| **Project Managers / Instructors** | Sections 1 and 2 for overview; Requirements Chart for scope summary |
-| **End Users** | Section 1.4 and Section 3.1 |
+This document is intended for the following readers:
 
-Start with Section 1 for context, then Section 2 for high-level understanding, then Sections 3–5 for detailed specifications.
+- Developers: Read all sections. Pay particular attention to Sections 3, 4,
+  and the System Requirements Chart.
+- Testers: Focus on Section 4 (Use Cases) and the Requirements Chart
+  to derive test cases.
+- Project Managers: Read Sections 1, 2, and the Requirements Chart
+  for scope and priority overview.
+- End Users / Players: Section 2.2 (Product Functions) provides a high-level
+  summary of what the game does.
+
+Suggested reading order:
+Section 1 -> Section 2 -> Section 4 -> Section 3 -> Requirements Chart.
 
 ### 1.4 Product Scope
 
-*Terminal-Based Servant Battle Royale* is a cross-platform C++ terminal application created as a school project. Its purpose is to demonstrate object-oriented programming concepts — specifically class design, encapsulation, inheritance, and operator/function overloading — through a game that combines RPG grid inventory management with turn-based Servant combat. Players enter a **Master** name at launch, are randomly assigned a **Servant** from the Fate franchise, manage equipment in a grid inventory, purchase and sell items at the *Shop of Chaldea*, and duel enemy Servants in a side-by-side FGO-style battle arena.
+Holy Grail War Terminal RPG is a single-player, terminal-based role-playing
+game written in C++. The player takes the role of a Master from either
+Fate/stay night or Fate/Zero, summons a Servant based on their typed name,
+manages an item inventory, purchases and sells equipment in a shop, and fights
+enemy Servants in turn-based combat. The game spans two Holy Grail Wars.
+Clearing the first war unlocks the second. The player has three lives across
+the full run. The product is entirely self-contained and requires no network
+access or external services.
 
 ### 1.5 References
 
-None.
+- Fate/stay night visual novel — TYPE-MOON, 2004
+- Fate/Zero light novel — Gen Urobuchi, TYPE-MOON, 2006-2007
+- ISO/IEC 14882:2017 — C++17 Standard
+- CMake documentation — https://cmake.org/documentation/
+- Project presentation — https://gamma.app/docs/Terminal-Based-Servant-Battle-Royale-azwmq41nce7pymc
 
-***
+---
 
 ## 2. Overall Description
 
 ### 2.1 Product Perspective
 
-This is a new, self-contained terminal application developed from scratch. It is not a component of a larger platform and does not replace any existing system. The application runs entirely within a terminal window and is composed of four tightly integrated subsystems — **Naming Screen**, **Inventory**, **Shop**, and **Battle Arena** — all managed by the central `Game` class. These subsystems share state through the `Player` object, which owns both the player's `Inventory` and their assigned `Servant`.
+Holy Grail War Terminal RPG is a new, self-contained product. It is not part
+of a larger system and has no dependency on external applications, databases,
+or network services. It runs entirely inside a terminal emulator. The game is
+inspired thematically by the Fate anime and visual novel franchise but is an
+independent project.
 
-```
-+--------------------------------------------+
-|                   Game                     |
-|  (Main loop, screen refresh, input dispatch)|
-|                                             |
-|   +----------+        +-----------------+  |
-|   |  Player  |        |      Shop       |  |
-|   | +--------+|       | (10-item stock, |  |
-|   | |Servant ||       |  gold, search,  |  |
-|   | | + NPs  ||       |  rarity/type    |  |
-|   | +--------+|       |  filters)       |  |
-|   | +--------+|       +-----------------+  |
-|   | |Inventory|                            |
-|   | | 2x3 grid|   +---------+              |
-|   | +--------+|   |  Enemy  |              |
-|   +----------+    | Servant |              |
-|                   +---------+              |
-+--------------------------------------------+
-           |
-    Terminal (stdout / stdin)
-```
+Internal modules:
+
+    +------------------+
+    |    main.cpp      |
+    +------------------+
+             |
+             v
+    +------------------+       +------------------+
+    |    Game          |<----->|    Player        |
+    |  (game.cpp)      |       |  (player.cpp)    |
+    +------------------+       +------------------+
+        |       |                      |
+        v       v                      v
+    +-------+ +-------+         +------------+
+    | Shop  | | Enemy |         | Inventory  |
+    +-------+ +-------+         +------------+
+        |                              |
+        v                              v
+    +-------+                   +----------+
+    | Item  |                   | Servant  |
+    +-------+                   +----------+
 
 ### 2.2 Product Functions
 
-The system shall provide the following high-level functions:
-
-- **Naming Screen**: Player enters their Master name at game launch before reaching the main menu.
-- **Grid Inventory Management**: Navigate a 2×3 bag grid; grab/drop items (`G`), cancel drag (`Q`/`K`), equip items to slots (`T`), sell items (`H`), filter by rarity, and view item detail panels.
-- **Shop System** (*Shop of Chaldea*): Browse up to 10 randomly generated items; buy with gold (manual placement or auto-place), sell via sell menu (`V`), live-search by name/type (`F`), filter by rarity and item type simultaneously, clear all filters (`C`), and restock at any time (`R`).
-- **Battle Arena**: Select a Servant from the Fate series, fight randomly chosen enemy Servants from the same series, perform basic attacks or Noble Phantasms, view both combatants side-by-side in a wider FGO-style layout, and escape battles.
-- **Item System**: Items of four types (Potion, Sword, Armor, Movement) in five rarities (Common, Magic, Rare, Legendary, Divine). Legendary and Divine items are shop-exclusive. Equipped items boost the player's effective combat stats.
-- **Random Servant Assignment**: The player is randomly assigned one of the available Servants from the Fate/stay night or Fate/Zero roster at game start.
+- Master Registration: Player types a name; canon names summon specific
+  Servants and place the player in the correct war.
+- Servant Showcase: After summoning, the player sees their Servant's ASCII
+  art, stats, and Noble Phantasms.
+- Main Menu: Navigation hub with Inventory, Shop, Battle, Gallery, Quit.
+- Inventory Management: Bag slots (storage) and equip slots (stat boosts).
+  Drag-and-drop interface. Item info panel. Servant status panel with live
+  equipment bonuses shown to the right of each rank bar.
+- Shop: Buy and sell items. Filter by rarity and type. Search by name.
+  Restock.
+- Battle Arena: Turn-based combat. Basic attack and Noble Phantasm actions.
+  Hit chance and damage based on Servant stats. Gold reward on victory.
+- Dual War Progression: Clear Fate/stay night or Fate/Zero, then start the
+  second war with reset inventory and gold but carried-over lives.
+- Lives System: 3 lives across both wars. Third loss ends the game.
+- Gallery: Side-by-side roster of both wars with colour-coded Servant status.
 
 ### 2.3 User Classes and Characteristics
 
-**Casual Player**
-The primary user class. Interacts with all subsystems at a basic level — navigating menus, purchasing items, and fighting battles without using advanced filtering or multi-slot equip strategies. Expected to have minimal prior game knowledge. Frequency of use: occasional. Primarily cares about readable item info, clear navigation, and understandable battle feedback.
+Regular Player
+The primary user. Has basic keyboard navigation skills. May or may not be
+familiar with the Fate franchise. Interacts with all features: naming,
+inventory, shop, battle, gallery. Expected to read on-screen hints for
+controls. No technical knowledge required.
 
-**Experienced / Power User**
-A player familiar with the game's systems who uses advanced features: simultaneous rarity + type filtering, live search in the shop, multi-step inventory optimization (grab/drop/equip), and Noble Phantasm targeting strategies. Interacts frequently and expects fast, fully keyboard-driven responsiveness with no input lag.
+Power User / Speedrunner
+Familiar with all game mechanics and canon Master names. Will deliberately
+type specific Master names to control which war and Servant they start with.
+Uses keyboard shortcuts efficiently and engages fully with Noble Phantasm
+and equipment mechanics.
 
 ### 2.4 Operating Environment
 
-| Platform | Version | Notes |
-|---|---|---|
-| **Windows** | 10 / 11 | Terminal with ANSI escape support (Windows Terminal, PowerShell). Uses `conio.h`. |
-| **macOS** | 10.15 Catalina and later | Terminal.app or iTerm2. Uses `termios.h`. |
-| **Linux** | Ubuntu 20.04+, Debian 10+ | Standard terminal emulator with ANSI support. Uses `termios.h`. |
-| **Build Tools** | CMake 3.16+, C++17 compiler (GCC 9+, Clang 10+, MSVC 2019+) | Required on all platforms. |
+- Operating Systems: Linux (Ubuntu 20.04+), macOS 12+,
+  Windows 10/11 with Windows Terminal
+- Compiler: GCC 9+ or Clang 11+ with C++17 support
+- Build System: CMake 3.10 or higher
+- Terminal: Any terminal emulator with ANSI 256-colour support and UTF-8
+  encoding (GNOME Terminal, iTerm2, Windows Terminal).
+  Classic Windows CMD.exe is NOT supported.
+- Hardware: Any machine capable of running the above operating systems.
+  No GPU or network card required.
 
 ### 2.5 Design and Implementation Constraints
 
-- The application must be written in **C++17**. Structured bindings and other C++17 features are actively used; no lower standard is acceptable.
-- The build system is **CMake 3.16+**. No other build system is supported.
-- All terminal rendering uses **ANSI escape codes** for color and cursor control. No external GUI library (SDL, ncurses, etc.) may be used.
-- Platform-specific raw input is handled via `conio.h` (Windows) and `termios.h` (Unix/macOS), abstracted through `singleCharacter.h`. This cross-platform contract must not be broken.
-- The project is a school assignment; no paid or proprietary third-party libraries may be used.
-- Memory management follows RAII principles. Manual `new`/`delete` is used only where justified (e.g., `ItemGenerator`, shop item ownership).
-- **Legendary** and **Divine** rarities are designated `shopOnly = true` in the `Item` class. The inventory generator must not produce these rarities; only the shop generator (`generateShopItem()`) may do so.
+- The entire UI must be rendered using ANSI escape codes and UTF-8
+  box-drawing characters. No external GUI libraries may be used.
+- All input must be read as raw single-character keypresses without requiring
+  Enter confirmation except in text input fields.
+- The project must build using CMake and produce a single executable binary.
+- The codebase must compile under C++17 with no external dependencies beyond
+  the standard library.
+- All Servant and item data is hardcoded at compile time. No external data
+  file or database is used.
+- The game is single-player only. No networking or multiplayer is in scope.
 
 ### 2.6 User Documentation
 
-The following documentation is delivered with the project:
+For a production release the following documentation should be provided:
 
-- **README.md** (included): Covers all controls, features, Servant stats, item pricing, build instructions, and class overview.
-- **In-game Key Reference**: Each subsystem (inventory, shop, battle arena) displays active keybindings on-screen at all times.
-- **UML Class Diagram** (`inventory_uml.drawio`): Included in the repository for developer reference.
-
-For a production release, the following would additionally be recommended: a short video walkthrough tutorial and a dedicated project wiki page.
+- README.md: Included in the repository. Covers build instructions, all
+  keyboard controls, Master name table, and game mechanics summary.
+- In-game control hints: Printed at the bottom of each screen so players
+  can always see available actions without external documentation.
+- Man page: A Unix man page for the binary describing launch options
+  and basic gameplay.
 
 ### 2.7 Assumptions and Dependencies
 
-- It is assumed that the player's terminal supports **ANSI escape codes**. If it does not, rendering artifacts will appear and the game will be unplayable.
-- It is assumed that the terminal window is at minimum **120 columns × 40 rows** to render the FGO-style side-by-side battle arena correctly. Smaller terminals produce undefined layout behavior.
-- The project depends only on the **C++ Standard Library**; no third-party dependencies.
-- It is assumed that the build environment has CMake 3.16+ and a C++17-compatible compiler installed and available on PATH.
-- The **Fate/Zero Servant roster is incomplete** in the current version (only Saber and Archer are implemented; Archer/Gilgamesh Zero has placeholder `-` stats). The full roster addition is a known outstanding item (see Appendix C).
+- It is assumed the player's terminal supports ANSI 256-colour codes and
+  UTF-8. The game will display incorrectly otherwise.
+- It is assumed the C++ standard library provides stdlib>, <vector>,
+  <set>, <string>, and <algorithm> with standard-conforming behaviour.
+- The game depends on std::rand() for randomisation. It is assumed that
+  std::srand() is called with a time-based seed in main.cpp before any
+  random servant or item generation.
+- It is assumed the terminal window is at least 80 columns wide and 40 rows
+  tall. Smaller terminals will cause layout wrapping.
 
-***
+---
 
 ## 3. External Interface Requirements
 
 ### 3.1 User Interfaces
 
-The application uses a **full-screen terminal UI** rendered entirely with ANSI escape codes and Unicode box-drawing characters. The following standards apply across all screens:
-
-- All UI panels use **double box-drawing borders** (e.g., `╔═╗║╚╝╠╣`) for primary frames and **single borders** (`─│`) for inner dividers.
-- **Color coding by rarity**: Common = white (`\033[37m`), Magic = blue (`\033[38;5;39m`), Rare = gold (`\033[38;5;220m`), Legendary = orange (`\033[38;5;202m`), Divine = magenta (`\033[38;5;201m`).
-- **Color coding by item type**: Potion = green, Sword = red, Armor = blue, Movement = orange.
-- **Shop header** displays "✿ SHOP OF CHALDEA ✿" with current gold treasury inline.
-- **Screen layout** has four distinct modes:
-    - **Naming Screen**: Centered input prompt for the Master name before the main menu.
-    - **Main Menu**: Centered list navigated with W/S + Enter.
-    - **Inventory/Shop Screen**: Left panel = grid or item list; right panel = item detail / gold / active filters.
-    - **Battle Arena**: Side-by-side Servant ASCII art (standard + mirrored for the enemy), HP bars below each Servant, action menu at the bottom. The arena is wider than standard columns to accommodate two Servants.
-- **Screen resolution**: Designed for a minimum of 120×40 terminal characters. Behavior on smaller terminals is undefined.
-- **Keyboard only**: No mouse input is used or required.
-- **Status/error messages**: Displayed inline within the active panel (e.g., "Not enough gold!", "Inventory full.", "Already used!").
-- **Smart Name Display**: Inventory grid cells show the shortest unambiguous prefix that distinguishes items from each other, not the full name.
-- Section 508 / accessibility compliance: Not applicable for this version (terminal-only, keyboard-driven).
+- The entire interface is rendered in a terminal using ANSI colour codes
+  and UTF-8 box-drawing characters.
+- All screens use a consistent dark-background colour scheme with gold,
+  cyan, and red accent colours.
+- Each screen has a clearly labelled header rendered as a double-line box
+  or horizontal rule.
+- A control hint bar is displayed at the bottom of every interactive screen.
+- All text input fields show a blinking cursor character and support
+  backspace for correction.
+- Error messages are displayed inline in red. No separate error screen.
+- The game does not support mouse input. All interaction is keyboard-only.
+- Minimum supported terminal width: 80 columns. Minimum height: 40 rows.
+- The game is not Section 508 compliant due to reliance on colour for game
+  state. Text labels ([FALLEN], [WINNER], [YOU]) are included alongside
+  colours as a partial mitigation.
 
 ### 3.2 Hardware Interfaces
 
-No dedicated hardware interfaces. The only hardware dependencies are a standard keyboard (for input) and a monitor (for terminal display). No special devices, sensors, or peripherals are required.
+None. The product has no direct hardware interfaces beyond the keyboard
+(input) and terminal display (output), both mediated by the operating system.
 
 ### 3.3 Software Interfaces
 
-The following internal software components are used:
+- C++ Standard Library (C++17): Used for all data structures, I/O,
+  and algorithms.
+- CMake 3.10+: Used as the build system to produce the final binary.
+- Operating system terminal API: On Linux/macOS, termios.h is used via
+  singleCharacter.h to set raw terminal mode for single-keypress input.
+  On Windows, equivalent CRT functions are used.
 
-- **C++ Standard Library (C++17)**: Containers (`std::vector`, `std::string`), algorithms (`std::transform`, `std::find`), random number generation (`<random>`, `rand()`), and standard I/O.
-- **`conio.h`** (Windows) / **`termios.h`** (macOS/Linux): Raw single-character keyboard input, abstracted by `singleCharacter.h`.
-- **CMake 3.16+**: Cross-platform build configuration (`CMakeLists.txt`).
-- No external databases, web servers, or network components are used.
+No database, web server, or third-party library is used.
 
 ### 3.4 Communications Interfaces
 
-None. The application is entirely offline and does not communicate with any external servers, APIs, databases, or network services. No internet connection is required or used at any point.
+None. The product does not connect to any external network, server, or API.
+All data is local and in-memory for the duration of a session.
+No data is persisted between sessions.
 
-***
+---
 
 ## 4. System Use Cases
 
-### Use Case Diagram (Textual)
+Overall Use Case Summary:
 
-```
-[ Player ] ---> (U1) Enter Master Name
-[ Player ] ---> (U2) Manage Inventory
-[ Player ] ---> (U3) Buy Item from Shop
-[ Player ] ---> (U4) Sell Item
-[ Player ] ---> (U5) Engage in Battle
-[ Player ] ---> (U6) Use Noble Phantasm
-(U5) includes --> (U6)
-(U3) includes --> (U4) [optional sell path]
-```
+    Player
+      |
+      |---> [U1] Register as Master
+      |---> [U2] Manage Inventory
+      |---> [U3] Buy Item from Shop
+      |---> [U4] Fight in Battle Arena
+      |---> [U5] View Gallery
+      |---> [U6] Progress to Second War
 
-***
 
-### Enter Master Name (U1)
+### Use Case U1: Register as Master
 
-- **Objective**: The player enters their Master name at game launch. The name is stored in `Game::masterName` and displayed throughout the session.
-- **Priority**: High
-- **Source**: Franciszek Wasiak (Developer / End-user)
-- **Actors**: Player
-- **Flow of Events**
-
-  **Basic Flow**
-    1. Game launches and displays the naming screen.
-    2. Player types their desired Master name.
+1. Objective: The player enters a Master name to summon their Servant
+   and be placed in the correct Holy Grail War.
+2. Priority: High
+3. Source: Jan Kowalski, End-user
+4. Actors: Player
+5. Flow of Events
+  1. Basic Flow
+    1. System displays the Master Registration screen.
+    2. Player types their name using keyboard input.
     3. Player presses Enter to confirm.
-    4. System stores the name in `Game::masterName`.
-    5. System proceeds to the main menu.
+    4. System matches the name (case-insensitive, whitespace-stripped)
+       against the canon Master table.
+    5. System selects the corresponding Servant and war.
+    6. System displays the Servant Profile screen.
+    7. System transitions to the Main Menu.
+  2. Alternative Flow 1 - Player presses Esc
+    1. System assigns a random Servant from a random war.
+    2. System displays the Servant Profile screen.
+    3. System transitions to the Main Menu.
+  3. Alternative Flow 2 - Name not recognised
+    1. System assigns a random Servant.
+    2. Continue from Basic Flow step 6.
+  4. Alternative Flow 3 - Player types "Kirei Kotomine"
+    1. System randomly selects Lancer (Cu) in FSN or
+       Assassin (Hassan Zero) in Zero.
+    2. Continue from Basic Flow step 6.
+  5. Exception Flow 1 - Player presses Enter with empty input
+    1. System does nothing and returns to step 5.1.2.
+6. Includes: None
+7. Preconditions: Game has been launched. No Master registered yet.
+8. Postconditions: Player has a Master name, a Servant, and is assigned
+   to a war. Main Menu is displayed.
+9. Notes/Issues: None
 
-  **Alternative Flow 1** — Player presses Enter with an empty name:
-    - System displays: "Name cannot be empty."
-    - Return to step 2.
 
-  **Exception Flow 1** — Input exceeds maximum character limit:
-    - System truncates input to the allowed maximum and proceeds.
+### Use Case U2: Manage Inventory
 
-- **Includes**: None
-- **Preconditions**: Game has just launched; no `masterName` has been set yet.
-- **Postconditions**: `Game::masterName` is set; player is on the main menu.
-- **Notes/Issues**: Maximum name length is currently undefined — see Appendix C, TBD-1.
+1. Objective: The player organises items between bag and equip slots
+   to boost Servant stats.
+2. Priority: High
+3. Source: Jan Kowalski, End-user
+4. Actors: Player
+5. Flow of Events
+  1. Basic Flow
+    1. Player selects Inventory from the Main Menu.
+    2. System displays the inventory grid and Servant panel.
+    3. Player uses WASD to move the cursor to an item.
+    4. Player presses T to equip the item to an equip slot.
+    5. System moves item and recalculates effective stats.
+    6. System updates STATUS panel with new values and green bonus.
+  2. Alternative Flow 1 - Player drags and drops an item
+    1. Player presses G to grab item at cursor.
+    2. Player moves cursor to target slot.
+    3. Player presses G again to drop.
+    4. System places item and updates display.
+  3. Alternative Flow 2 - Player sells an item
+    1. Player presses H on an item.
+    2. System displays sell confirmation with price (80-90% of base).
+    3. Player presses Y to confirm.
+    4. System removes item and adds gold to treasury.
+  4. Exception Flow 1 - Player equips to occupied slot
+    1. System displays red error message.
+    2. Returns to step 5.1.3.
+6. Includes: None
+7. Preconditions: Player is registered. Main Menu is displayed.
+8. Postconditions: Items organised. Servant effective stats updated.
+9. Notes/Issues: Only equip slot items (columns 4-5) affect stats.
 
-***
 
-### Manage Inventory (U2)
+### Use Case U3: Buy Item from Shop
 
-- **Objective**: The player navigates their 2×3 inventory grid, repositions items via drag-and-drop, equips items to combat slots, and sells unwanted items.
-- **Priority**: High
-- **Source**: Franciszek Wasiak (Developer / End-user)
-- **Actors**: Player
-- **Flow of Events**
+1. Objective: The player purchases an item and places it in inventory.
+2. Priority: High
+3. Source: Jan Kowalski, End-user
+4. Actors: Player
+5. Flow of Events
+  1. Basic Flow
+    1. Player selects Shop from the Main Menu.
+    2. System displays the shop item list with prices and filters.
+    3. Player navigates with W/S to select an item.
+    4. Player presses B to buy.
+    5. System checks player has enough gold and an empty bag slot.
+    6. System deducts gold and opens the item placement menu.
+    7. Player selects a bag slot and presses Enter.
+    8. System places item in the selected slot.
+  2. Alternative Flow 1 - Insufficient gold
+    1. System displays red error message.
+    2. Returns to step 5.1.3.
+  3. Alternative Flow 2 - Inventory full
+    1. System displays red error message.
+    2. Returns to step 5.1.3.
+  4. Alternative Flow 3 - Player cancels placement (Q)
+    1. System refunds gold and returns item to shop.
+6. Includes: None
+7. Preconditions: Player is registered and has gold. Shop is open.
+8. Postconditions: Item is in player inventory. Gold deducted.
+9. Notes/Issues: None
 
-  **Basic Flow**
-    1. Player selects "Inventory" from the main menu.
-    2. System renders the 2×3 inventory grid. Grid cells show the shortest unambiguous item name prefix.
-    3. Player navigates using WASD.
-    4. Player presses `G` to grab the item at the cursor position.
-    5. Player moves the cursor to a target slot and presses `G` again to drop or swap.
-    6. System updates the grid to reflect new item positions.
-    7. Player presses Backspace to exit the inventory.
 
-  **Alternative Flow 1** — Player presses `Q` or `K` to cancel drag:
-    - System returns the grabbed item to its original slot without moving it.
+### Use Case U4: Fight in Battle Arena
 
-  **Alternative Flow 2** — Player presses `T` on an item to equip it:
-    - System moves the item to the equipment slot.
-    - Player's effective combat stats are recalculated to include the item's percent effect.
+1. Objective: The player fights an enemy Servant in turn-based combat
+   and earns gold on victory.
+2. Priority: High
+3. Source: Jan Kowalski, End-user
+4. Actors: Player
+5. Flow of Events
+    1. Basic Flow
+        1. Player selects Battle from the Main Menu.
+        2. System selects a random undefeated enemy Servant from the pool.
+        3. System displays the battle screen with both Servant panels,
+           HP bars, and action menu.
+        4. Player presses A for a basic attack.
+        5. System calculates hit chance based on AGI difference.
+        6. If hit, system calculates damage: player STR minus half enemy DUR.
+        7. Enemy takes damage. HP bar updates.
+        8. Enemy takes their turn (basic attack or Noble Phantasm).
+        9. Player takes damage if hit. HP bar updates.
+        10. Steps 4-9 repeat until one side reaches 0 HP.
+        11. If enemy reaches 0 HP, system displays victory screen,
+            awards gold, and marks enemy as defeated.
+        12. System returns to battle lobby.
+    2. Alternative Flow 1 - Player uses Noble Phantasm
+        1. Player presses 1-9 to select an available NP.
+        2. System displays NP banner with name, damage, and description.
+        3. System calculates hit chance (higher base than basic attack).
+        4. If hit, system calculates scaled NP damage.
+        5. NP is marked as used for this battle.
+        6. Continue from Basic Flow step 8.
+    3. Alternative Flow 2 - Player flees
+        1. Player presses E.
+        2. System displays flee message and returns to battle lobby.
+        3. No life is lost.
+    4. Exception Flow 1 - Player HP reaches 0
+        1. System decrements lives counter.
+        2. System displays defeat screen showing remaining lives.
+        3. If lives > 0, system returns to battle lobby.
+        4. If lives == 0, system displays game over screen and exits.
+6. Includes: None
+7. Preconditions: Player is registered. Enemies remain in current war.
+8. Postconditions: Enemy is defeated and marked in gallery. Gold awarded.
+   Or player lost a life and returned to lobby. Or game ended.
+9. Notes/Issues: Noble Phantasms reset between battles but not within
+   a single battle.
 
-  **Alternative Flow 3** — Player presses `H` on an item to sell it:
-    - System calculates a sale price of 80–90% of the item's base value (randomised per sale).
-    - System displays the sale price and prompts confirmation.
-    - Player confirms; gold is credited to the shop balance; item is removed from the grid.
 
-  **Alternative Flow 4** — Player presses `1`, `2`, or `3` to filter by rarity:
-    - System highlights only items matching the selected rarity (Common / Magic / Rare).
-    - Player presses `0` to clear the filter.
+### Use Case U5: View Gallery
 
-  **Alternative Flow 5** — Player presses `I` to toggle the item info panel:
-    - System renders a detailed stats panel (name, type, rarity, price, percent effect, durability, level) for the item at the cursor.
+1. Objective: The player views the full roster of both Holy Grail Wars
+   with colour-coded status for each Servant.
+2. Priority: Medium
+3. Source: Jan Kowalski, End-user
+4. Actors: Player
+5. Flow of Events
+    1. Basic Flow
+        1. Player selects Gallery from the Main Menu.
+        2. System displays two columns side by side:
+           left column for Fate/stay night,
+           right column for Fate/Zero.
+        3. Each row shows Servant name and Master name.
+        4. Colour coding applied:
+            - Cyan [YOU]: current active Servant
+            - Green star [WINNER]: Servant used to clear that war
+            - Red [FALLEN]: enemy defeated by player
+            - Gold: Servant still standing
+        5. Player presses any key to return to Main Menu.
+    2. Alternative Flow 1 - No battles fought yet
+        1. All Servants shown in gold (none fallen, no winner).
+6. Includes: None
+7. Preconditions: Player is registered. Main Menu is displayed.
+8. Postconditions: Gallery viewed. Player returned to Main Menu.
+9. Notes/Issues: Master names are context-aware. Player rows show the
+   typed Master name. Winner rows show the name used during that war.
+   All other rows show canon lore Master name.
 
-  **Alternative Flow 6** — Player presses `P` to open the Shop directly from inventory:
-    - System transitions to the Shop screen without returning to the main menu.
 
-  **Exception Flow 1** — Player attempts to drop a grabbed item onto an occupied slot:
-    - Items are swapped rather than stacked; no item is lost.
+### Use Case U6: Progress to Second War
 
-- **Includes**: None
-- **Preconditions**: Player is on the main menu with an existing `Player` object and `Inventory`.
-- **Postconditions**: Inventory state is updated; equipped items affect `Player` effective combat stats.
-- **Notes/Issues**: The number of equipment slots available to the player is TBD — see Appendix C, TBD-2.
+1. Objective: After clearing all enemies in the first war the player
+   is transitioned to the second Holy Grail War with a new Master name,
+   new Servant, reset inventory, and reset gold.
+2. Priority: High
+3. Source: Jan Kowalski, End-user
+4. Actors: Player
+5. Flow of Events
+    1. Basic Flow
+        1. Player defeats the last remaining enemy in the current war.
+        2. System marks the war as cleared and records the winner Servant.
+        3. System displays a war-cleared announcement screen.
+        4. Player presses any key to accept the transition.
+        5. System resets inventory to a new random starter set.
+        6. System resets gold to 0.
+        7. System assigns a random fallback Servant from the new war.
+        8. System displays the New Master Registration screen.
+        9. Player types a new Master name (or presses Esc to keep random).
+        10. System assigns the correct Servant for that name in the new war.
+        11. System displays the Servant Profile screen.
+        12. System returns to the Main Menu now in the new war.
+    2. Alternative Flow 1 - Both wars cleared
+        1. System displays a final victory screen.
+        2. System exits the game.
+    3. Alternative Flow 2 - Player types unknown name at step 5.1.9
+        1. System keeps the random fallback Servant.
+        2. Continue from step 5.1.11.
+6. Includes: U1 (registration logic reused in step 5.1.9)
+7. Preconditions: All enemies in the current war have been defeated.
+8. Postconditions: Player is in the second war with new Servant, empty
+   inventory, and zero gold. Lives carry over unchanged.
+9. Notes/Issues: None
 
-***
-
-### Buy Item from Shop (U3)
-
-- **Objective**: The player browses the *Shop of Chaldea* (up to 10 randomly generated items) and purchases one, placing it in their inventory.
-- **Priority**: High
-- **Source**: Franciszek Wasiak (Developer / End-user)
-- **Actors**: Player
-- **Flow of Events**
-
-  **Basic Flow**
-    1. Player selects "Shop" from the main menu (or presses `P` from inventory).
-    2. System displays up to 10 items with columns: index, name, type, rarity, price, and effect percentage.
-    3. Player navigates with W/S and selects an item by pressing `B`.
-    4. System prompts the player to choose an inventory grid slot (press ESC to auto-place).
-    5. System deducts the item's gold cost from the player's balance.
-    6. System places the item in the chosen (or auto-selected) grid slot.
-
-  **Alternative Flow 1** — Player has insufficient gold:
-    - System displays: "Not enough gold!"
-    - Return to step 3.
-
-  **Alternative Flow 2** — Player's inventory is full and no auto-place slot is available:
-    - System displays: "Inventory full!"
-    - Return to step 3.
-
-  **Alternative Flow 3** — Player presses `F` to open live search:
-    - System accepts a text query and filters the item list to show only names or types containing the query string (case-insensitive).
-    - Player presses `C` to clear all active filters and the search query simultaneously.
-
-  **Alternative Flow 4** — Player filters by rarity or type simultaneously:
-    - Rarity and type filters compound: only items matching both active filters are shown.
-
-  **Alternative Flow 5** — Player presses `R` to restock the shop:
-    - System generates a new set of 10 items via `generateShopItem()`, which may include Legendary and Divine rarities.
-    - The previous stock is discarded.
-
-  **Exception Flow 1** — Player presses `E` at any time:
-    - System exits the shop and returns to the main menu.
-
-- **Includes**: None
-- **Preconditions**: Player is on the main menu; player has a gold balance (initialised on first shop entry).
-- **Postconditions**: Player's gold is reduced by the item's price; item is placed in inventory.
-- **Notes/Issues**: None.
-
-***
-
-### Sell Item (U4)
-
-- **Objective**: The player sells an item either directly from inventory (`H`) or through the shop sell menu (`V`), receiving a gold refund.
-- **Priority**: High
-- **Source**: Franciszek Wasiak (Developer / End-user)
-- **Actors**: Player
-- **Flow of Events**
-
-  **Basic Flow — Sell from Inventory**
-    1. Player navigates to an item in the inventory grid.
-    2. Player presses `H`.
-    3. System calculates the sale price: 80–90% of the item's base price (randomised).
-    4. System displays the sale price and requests confirmation.
-    5. Player confirms; gold is added to the player balance; item is removed from the grid.
-
-  **Basic Flow — Sell from Shop Menu**
-    1. While in the shop, player presses `V` to open the sell menu.
-    2. System displays the player's inventory items available for sale.
-    3. Player selects an item to sell.
-    4. System adds `item->getPrice() / 2` (50% of base price) to the player's gold.
-    5. Item is removed from inventory and added to the shop's stock.
-
-  **Alternative Flow 1** — Player cancels sell confirmation:
-    - No gold is transferred; the item remains in the grid.
-
-  **Exception Flow 1** — Player attempts to sell from an empty inventory:
-    - System displays: "Nothing to sell."
-
-- **Includes**: None
-- **Preconditions**: Player has at least one item in their inventory.
-- **Postconditions**: Gold is credited to the player; item is removed from inventory.
-- **Notes/Issues**: The sell-from-inventory price (80–90%) and the sell-via-shop price (50%) are intentionally different and reflect different sell channels.
-
-***
-
-### Engage in Battle (U5)
-
-- **Objective**: The player selects "Battle Arena" from the main menu and fights a randomly chosen enemy Servant from the same Fate series, in a side-by-side FGO-style arena.
-- **Priority**: High
-- **Source**: Franciszek Wasiak (Developer / End-user)
-- **Actors**: Player
-- **Flow of Events**
-
-  **Basic Flow**
-    1. Player selects "Battle Arena" from the main menu.
-    2. System randomly selects an enemy Servant from the same Fate series (Fate/stay night or Fate/Zero) as the player's Servant.
-    3. System renders both Servants side-by-side: player Servant ASCII art on the left, enemy Servant **mirrored ASCII art** on the right, with HP bars below each.
-    4. Player chooses an action: `A` (Basic Attack) or `1–9` (Noble Phantasm by index).
-    5. System calculates hit chance: `75% + (playerAgility − enemyAgility) × 2`, capped between 10% and 95%.
-    6. If the attack hits, damage is applied to the enemy's HP.
-    7. Enemy Servant automatically performs a counterattack using the same agility-based formula.
-    8. Steps 4–7 repeat until one Servant's HP reaches 0.
-    9. System displays the battle result: Victory or Defeat.
-    10. Player presses `B` to immediately battle again, or any other key to return to the main menu.
-
-  **Alternative Flow 1** — Player uses a Noble Phantasm (step 4):
-    - System checks if the chosen NP has already been used this battle (NPs are single-use per battle).
-    - If available: NP is activated; scaled damage is applied; NP is flagged as used for this battle.
-    - If already used: System displays "Already used!" and returns to step 4.
-
-  **Alternative Flow 2** — Player presses `E` to escape:
-    - System ends the battle with no result and returns to the main menu.
-
-  **Exception Flow 1** — Both HP values reach 0 in the same turn:
-    - Behavior is TBD — see Appendix C, TBD-4.
-
-- **Includes**: U6 (Use Noble Phantasm)
-- **Preconditions**: Player is on the main menu; player has an assigned Servant with valid stats.
-- **Postconditions**: Battle result is displayed; NP usage flags are reset for the next battle.
-- **Notes/Issues**: Gold reward for winning a battle is TBD — see Appendix C, TBD-5.
-
-***
-
-### Use Noble Phantasm (U6)
-
-- **Objective**: During battle, the player activates one of their Servant's Noble Phantasms for enhanced scaled damage.
-- **Priority**: Medium
-- **Source**: Franciszek Wasiak (Developer / End-user)
-- **Actors**: Player
-- **Flow of Events**
-
-  **Basic Flow**
-    1. During battle, player presses a number key `1–9` corresponding to a Noble Phantasm by index.
-    2. System checks whether the NP has already been used this battle.
-    3. System calculates NP damage scaled from the Servant's STR stat.
-    4. Damage is applied to the enemy; the NP is flagged as used for the remainder of the battle.
-
-  **Alternative Flow 1** — NP already used:
-    - System displays "Already used!" and returns to the action selection prompt.
-
-  **Alternative Flow 2** — Key pressed has no corresponding NP:
-    - System ignores the input and returns to the action selection prompt.
-
-- **Includes**: None
-- **Preconditions**: Player is in an active battle; the selected NP has not yet been used this battle.
-- **Postconditions**: Enemy HP is reduced; the NP is flagged as used for this battle session.
-- **Notes/Issues**: NP damage scaling formula is TBD — see Appendix C, TBD-3.
-
-***
+---
 
 ## 5. Other Nonfunctional Requirements
 
 ### 5.1 Performance Requirements
 
-- The game shall render any screen (inventory, shop, battle arena) within **100 milliseconds** of a keypress under normal operating conditions.
-- Random item generation for a 10-item shop restock shall complete in under **50 milliseconds**.
-- The application shall consume no more than **50 MB of RAM** during normal operation.
-- The application shall launch and display the naming screen within **500 milliseconds** of execution.
+- The system shall render each screen and respond to a keypress within
+  100 milliseconds on any machine meeting the operating environment
+  requirements described in section 2.4.
+- The system shall generate a full random item set for the shop in under
+  50 milliseconds.
+- The system shall complete a battle damage calculation and update the
+  display within 50 milliseconds of a player keypress.
+- No frame rate or refresh cycle is used. The display updates only on
+  player input, so CPU usage at idle shall be effectively 0%.
 
 ### 5.2 Safety Requirements
 
-No safety-critical requirements apply. The application is a single-player terminal game with no real-world hardware control, financial transactions, or persistent user data storage.
+- The game contains no real-world financial transactions, personal data
+  collection, or network communication. There are no safety risks
+  associated with the use of this product.
+- The game uses std::exit(0) on a third-life-loss game over. This is
+  acceptable as the process owns no persistent resources that require
+  cleanup at that point.
 
 ### 5.3 Security Requirements
 
-- The application stores no personal data, passwords, or sensitive user information.
-- The only user-provided input is the Master name (stored in memory only; never written to disk).
-- No network communication occurs; there is no remote attack surface.
+- The system stores no user data. No login, account, or authentication
+  mechanism exists.
+- No data is written to disk during or after a session. All state is
+  in-memory only.
+- The binary accepts no command-line arguments that could be exploited.
+- No external input beyond keyboard keypresses is processed.
 
 ### 5.4 Software Quality Attributes
 
-- **Portability**: The application shall compile and run identically on Windows 10+, macOS 10.15+, and Ubuntu 20.04+ using only the CMake build system and the C++ Standard Library, with no platform-specific source changes required by the developer beyond the existing `singleCharacter.h` abstraction.
-- **Maintainability**: Each subsystem (Inventory, Shop, Battle Arena) shall be encapsulated in its own class with a clean public interface, enabling independent modification without cascading changes.
-- **Reliability**: The application shall not crash on invalid or unexpected keyboard input. All input shall be validated before processing.
-- **Usability**: All active keybindings shall be visible on-screen within each subsystem at all times, so players never need to consult external documentation during gameplay.
-- **Testability**: Each class (`Item`, `Servant`, `Inventory`, `Shop`, `Player`) shall expose public methods that can be exercised independently of the `Game` main loop.
-- **Correctness**: The `shopOnly` flag on `Item` shall be enforced at the generator level. Items with `shopOnly = true` (Legendary, Divine) shall never appear in the in-game inventory via the normal `ItemGenerator`; only `generateShopItem()` may produce them.
+- Usability: All available actions must be visible on screen at all times
+  via the control hint bar. A new player shall be able to navigate all
+  screens without consulting external documentation.
+- Reliability: The game shall not crash or produce undefined behaviour
+  during normal play on any supported platform.
+- Maintainability: All Servant definitions are isolated in servant.cpp.
+  Adding a new Servant requires only adding a factory function and
+  registering it in allServants(). No changes to game logic are needed.
+- Portability: The codebase shall compile without modification on Linux,
+  macOS, and Windows (with Windows Terminal) using CMake and a C++17
+  compiler.
+- Correctness: Equipment bonuses shall be calculated as
+  base stat x percent value / 100 and reflected accurately in both
+  the STATUS panel and the battle damage formulas.
 
 ### 5.5 Business Rules
 
-- **Starting gold** is randomised on first shop entry: 200–400g with 70% probability, 400–500g with 20% probability, 500–800g with 10% probability.
-- **Sell from inventory** (`H` key): yields 80–90% of the item's base price, randomised per sale transaction.
-- **Sell via shop sell menu** (`V` key): yields exactly 50% of the item's base price (`item->getPrice() / 2`).
-- **Noble Phantasms** are single-use per battle and reset automatically between battles.
-- **Enemy Servants** are always drawn from the same Fate series (Fate/stay night or Fate/Zero) as the player's assigned Servant.
-- **Rarity distribution for generated items** (inventory generator): Common 40%, Magic 30%, Rare 30%. Legendary and Divine may appear in shop stock only.
-- **Hit chance formula**: `75% + (playerAgility − enemyAgility) × 2`, capped to the range [10%, 95%].
+- A Servant can only be used once per Noble Phantasm per battle.
+- A player can only equip items in columns 4-5 of the inventory grid.
+- Sell price is always 80-90% of base item price, randomised per sale.
+- Lives carry over between wars. Inventory and gold do not.
+- Kirei Kotomine as a Master name always results in a random war
+  assignment by design.
 
-***
+---
 
 ## 6. Other Requirements
 
-None at this time.
+None beyond what is described in sections 1-5.
 
-***
+---
 
-## System Requirements Chart
+## 7. System Requirements Chart
 
-| ID | Priority | Type | Source | Contained in Use Case(s) | Description |
-|---|---|---|---|---|---|
-| FR-01 | High | F | Franciszek Wasiak (Developer) | U1 | The system shall display a naming screen on game launch and store the entered Master name in `Game::masterName`. |
-| FR-02 | High | F | Franciszek Wasiak (Developer) | U2 | The system shall display a 2×3 inventory grid navigable with WASD keys. |
-| FR-03 | High | F | Franciszek Wasiak (Developer) | U2 | The system shall allow the player to grab and drop items using the `G` key; pressing `Q` or `K` shall cancel an active drag. |
-| FR-04 | High | F | Franciszek Wasiak (Developer) | U2 | The system shall allow the player to equip items to an equipment slot using the `T` key, updating effective combat stats. |
-| FR-05 | High | F | Franciszek Wasiak (Developer) | U2 U4 | The system shall allow the player to sell an inventory item with `H`, yielding 80–90% of its base price (randomised). |
-| FR-06 | Medium | F | Franciszek Wasiak (Developer) | U2 | The system shall allow filtering inventory items by rarity using keys `1` (Common), `2` (Magic), `3` (Rare), and `0` to clear. |
-| FR-07 | Medium | F | Franciszek Wasiak (Developer) | U2 | The system shall display the shortest unambiguous name prefix for each item in inventory grid cells. |
-| FR-08 | High | F | Franciszek Wasiak (Developer) | U3 | The system shall generate up to 10 random items on shop entry or restock. Shop items may include Legendary and Divine rarities. |
-| FR-09 | High | F | Franciszek Wasiak (Developer) | U3 | The system shall deduct the item's gold cost from the player's balance on purchase and prevent purchase if gold is insufficient. |
-| FR-10 | High | F | Franciszek Wasiak (Developer) | U3 | The system shall prevent purchase if the player's inventory is full. |
-| FR-11 | Medium | F | Franciszek Wasiak (Developer) | U3 | The system shall support live name/type search filtering in the shop via the `F` key (case-insensitive). |
-| FR-12 | Medium | F | Franciszek Wasiak (Developer) | U3 | The system shall support simultaneous rarity and item type filtering in the shop, compounding both constraints. |
-| FR-13 | Medium | F | Franciszek Wasiak (Developer) | U3 | The system shall allow the player to clear all active shop filters and the search query with the `C` key. |
-| FR-14 | High | F | Franciszek Wasiak (Developer) | U4 | The system shall allow the player to open a sell menu from the shop via the `V` key, selling inventory items for 50% of their base price. |
-| FR-15 | High | F | Franciszek Wasiak (Developer) | U5 | The system shall randomly select an enemy Servant from the same Fate series as the player's Servant for each battle. |
-| FR-16 | High | F | Franciszek Wasiak (Developer) | U5 | The system shall display both Servants side-by-side in the battle arena: player Servant (standard ASCII art) on the left, enemy Servant (mirrored ASCII art) on the right, each with HP bars. |
-| FR-17 | High | F | Franciszek Wasiak (Developer) | U5 | The system shall calculate hit chance using: `75% + (playerAGI − enemyAGI) × 2`, capped between 10% and 95%. |
-| FR-18 | High | F | Franciszek Wasiak (Developer) | U5 U6 | The system shall allow the player to use a Noble Phantasm once per battle via number keys `1–9`. Attempting to reuse a spent NP shall display "Already used!". |
-| FR-19 | High | F | Franciszek Wasiak (Developer) | U5 | The system shall allow the player to escape a battle at any time by pressing `E`. |
-| FR-20 | Medium | F | Franciszek Wasiak (Developer) | U3 | Starting gold shall be randomised: 200–400g (70%), 400–500g (20%), 500–800g (10%). |
-| FR-21 | Medium | F | Franciszek Wasiak (Developer) | — | The `Item` class shall enforce a `shopOnly` flag. Legendary and Divine items shall only be generated by `generateShopItem()`; the standard `ItemGenerator` shall never produce them. |
-| NFR-01 | High | NF | Franciszek Wasiak (Developer) | N/A | The system shall render any screen within 100ms of a keypress under normal conditions. |
-| NFR-02 | High | NF | Franciszek Wasiak (Developer) | N/A | The application shall compile and run on Windows 10+, macOS 10.15+, and Ubuntu 20.04+ without source code changes. |
-| NFR-03 | High | NF | Franciszek Wasiak (Developer) | N/A | The application shall not crash on invalid or unexpected keyboard input; all input shall be validated before processing. |
-| NFR-04 | Medium | NF | Franciszek Wasiak (Developer) | N/A | All active keybindings shall be visible on-screen within each subsystem at all times. |
-| NFR-05 | Medium | NF | Franciszek Wasiak (Developer) | N/A | The application shall use no more than 50 MB of RAM during normal operation. |
-| NFR-06 | Medium | NF | Franciszek Wasiak (Developer) | N/A | Each subsystem class (`Inventory`, `Shop`, `Servant`, `Item`) shall expose public methods exercisable independently of the `Game` main loop. |
+ID   | Priority | Type | Source              | Use Case | Description
+-----|----------|------|---------------------|----------|--------------------------------------------------
+R01  | High     | F    | Jan Kowalski, User  | U1       | The system shall match typed Master names to the correct Servant and Holy Grail War.
+R02  | High     | F    | Jan Kowalski, User  | U1       | The system shall assign a random Servant when an unknown name is entered or Esc is pressed.
+R03  | High     | F    | Jan Kowalski, User  | U1       | The system shall display the Servant profile with ASCII art, stats, and Noble Phantasms after summoning.
+R04  | High     | F    | Jan Kowalski, User  | U2       | The system shall allow items to be moved between bag and equip slots using keyboard input.
+R05  | High     | F    | Jan Kowalski, User  | U2       | The system shall apply equipment bonuses to Servant stats based on item type and percent value.
+R06  | High     | F    | Jan Kowalski, User  | U2       | The system shall display the stat bonus to the right of each rank bar in the STATUS panel.
+R07  | High     | F    | Jan Kowalski, User  | U3       | The system shall allow the player to buy items from the shop if they have sufficient gold.
+R08  | Medium   | F    | Jan Kowalski, User  | U3       | The system shall allow filtering shop items by rarity and type.
+R09  | Medium   | F    | Jan Kowalski, User  | U3       | The system shall allow searching shop items by name.
+R10  | High     | F    | Jan Kowalski, User  | U2,U3    | The system shall allow the player to sell items for 80-90% of base price.
+R11  | High     | F    | Jan Kowalski, User  | U4       | The system shall conduct turn-based combat between the player Servant and a random enemy Servant.
+R12  | High     | F    | Jan Kowalski, User  | U4       | The system shall award gold to the player on defeating an enemy using the formula: 50 + STR x 2 + DUR + MaxHP / 10.
+R13  | High     | F    | Jan Kowalski, User  | U4       | The system shall decrement the player life count on defeat and end the game on the third loss.
+R14  | High     | F    | Jan Kowalski, User  | U4       | The system shall allow the player to use Noble Phantasms once per battle per NP.
+R15  | Medium   | F    | Jan Kowalski, User  | U5       | The system shall display all Servants from both wars side by side in the gallery.
+R16  | Medium   | F    | Jan Kowalski, User  | U5       | The system shall colour-code each Servant in the gallery as current (cyan), winner (green), fallen (red), or alive (gold).
+R17  | High     | F    | Jan Kowalski, User  | U6       | The system shall transition the player to the second Holy Grail War after clearing the first.
+R18  | High     | F    | Jan Kowalski, User  | U6       | The system shall reset inventory and gold when transitioning between wars.
+R19  | High     | F    | Jan Kowalski, User  | U6       | The system shall carry over lives when transitioning between wars.
+R20  | High     | NF   | Jan Kowalski, User  | NA       | The system shall respond to all keypresses and update the display within 100 milliseconds.
+R21  | High     | NF   | Jan Kowalski, User  | NA       | The system shall compile and run without modification on Linux, macOS, and Windows Terminal.
+R22  | Medium   | NF   | Jan Kowalski, User  | NA       | The system shall display all available controls on screen at all times via a hint bar.
+R23  | Medium   | NF   | Jan Kowalski, User  | NA       | The system shall not crash or produce undefined behaviour during normal play.
+R24  | Low      | NF   | Jan Kowalski, User  | NA       | Adding a new Servant shall require changes only in servant.cpp with no modifications to game logic.
 
-***
+---
 
 ## Appendix A: Glossary
 
-| Term | Definition |
-|---|---|
-| **Servant** | A heroic spirit summoned as a combatant. Defined by stats (HP, STR, DUR, AGI), Noble Phantasms, ASCII art, mirrored ASCII art, a description, and a Fate series designation. |
-| **Master** | The player's in-game role. The name entered on the naming screen is stored in `Game::masterName` and also in the `Servant::masterName` field. |
-| **Noble Phantasm (NP)** | A Servant's named special attack. Single-use per battle; deals damage scaled from the Servant's STR stat. |
-| **Grid Inventory** | The 2×3 bag layout used to hold items. Each cell holds exactly one item. |
-| **Rarity** | Item quality tier: Common, Magic, Rare (all generators), Legendary, Divine (shop-exclusive). Higher rarity = stronger stats and higher price. |
-| **shopOnly** | An `Item` boolean flag (`true` for Legendary and Divine). Prevents these rarities from appearing via the standard `ItemGenerator`. |
-| **Gold** | In-game currency used to purchase items at the shop. Starting balance is randomised on first shop entry. |
-| **ANSI Escape Codes** | Terminal control sequences used for text color, cursor movement, and screen clearing. |
-| **CMake** | A cross-platform build system generator used to build the project. Minimum required version: 3.16. |
-| **WASD** | Standard keyboard navigation: W (up), A (left), S (down), D (right). |
-| **STR / DUR / AGI** | Servant combat stats: Strength (attack power and NP damage), Durability (damage reduction), Agility (hit chance modifier). |
-| **mirroredArt** | A horizontally flipped version of a Servant's ASCII art used to render the enemy Servant in the right panel of the battle arena. |
-| **servantDescription** | A short flavour-text string describing a Servant, displayed in the battle arena or info panels. |
-| **Shop of Chaldea** | The in-game name for the shop screen, as displayed in the shop header. |
+Master
+A player or character who summons and commands a Servant in the
+Holy Grail War. In this game, the player takes the role of a Master.
 
-***
+Servant
+A heroic spirit summoned to fight in the Holy Grail War. Each Servant
+has stats (HP, STR, DUR, AGI) and Noble Phantasms.
+
+Noble Phantasm (NP)
+A special attack unique to each Servant. Can be used once per battle.
+Has a base damage value and a damage scale multiplier.
+
+Holy Grail War
+A tournament-style battle between seven Masters and their Servants.
+The game features two: the Fifth War (Fate/stay night) and the
+Fourth War (Fate/Zero).
+
+Bag Slot
+Inventory columns 1-3. Items stored here have no effect on stats.
+
+Equip Slot
+Inventory columns 4-5. Items placed here boost Servant stats based
+on item type and percent value.
+
+Percent Value
+A property of each item representing the percentage bonus it applies
+to a base stat when equipped. Formula: base stat x percent / 100.
+
+ANSI Escape Codes
+Special character sequences interpreted by terminal emulators to
+produce coloured and formatted text output.
+
+UTF-8
+A variable-width character encoding used to render box-drawing
+characters and special symbols in the terminal UI.
+
+Series
+An enum in the codebase with values StayNight and Zero, used to
+associate Servants and enemies with the correct Holy Grail War.
+
+---
 
 ## Appendix B: Analysis Models
 
-The UML Class Diagram is available in the repository as `inventory_uml.drawio`. No additional analysis models are included in this SRS. Data flow diagrams and state-transition diagrams will be produced in the high-level design deliverable.
+Not included in this SRS. Class diagrams, state-transition diagrams,
+and data flow diagrams will be produced during the high-level design
+deliverable.
 
-***
+---
 
 ## Appendix C: To Be Determined List
 
-1. **TBD-1 — Maximum Master name length**: The naming screen does not yet enforce a character limit. A reasonable maximum (e.g., 20 characters) should be defined and enforced to prevent layout overflow in the shop header and battle arena display.
-2. **TBD-2 — Equipment slot count**: The number of equipment slots available to the player (e.g., 1 or 2 simultaneous equips) is not explicitly documented. This affects how many items can boost combat stats at once.
-3. **TBD-3 — Noble Phantasm damage scaling formula**: The exact formula for calculating NP damage from the Servant's STR stat is present in `servant.cpp` but not yet documented in any external specification. It should be extracted and recorded here.
-4. **TBD-4 — Simultaneous KO handling**: Behavior when both Servant HP values reach 0 in the same turn (draw condition) is not explicitly handled in the current implementation. A draw screen or tie-breaker rule should be defined.
-5. **TBD-5 — Gold reward on battle victory**: Whether defeating an enemy Servant awards the player with gold is not yet implemented or specified. Adding this would significantly improve inventory and shop progression loop balance.
-6. **TBD-6 — Fate/Zero roster completion**: The current Fate/Zero Servant table in the README lists only Saber (Artoria Zero) with full stats, and Archer (Gilgamesh Zero) with placeholder `-` values. The remaining five Fate/Zero Servants (Lancer/Diarmuid, Rider/Iskander, Caster/Gilles de Rais, Berserker/Lancelot, Assassin/Hassan Hundred Faces) need to be implemented with stats, Noble Phantasms, ASCII art, mirrored art, and descriptions before the Fate/Zero series can be used in battle.
+TBD-01: Save/load system. It is currently undecided whether a future
+version will support saving game state between sessions.
+
+TBD-02: Difficulty modes. A hard mode with stronger enemy stats or
+fewer lives has been discussed but not specified.
+
+TBD-03: Windows raw input. The singleCharacter.h implementation for
+Windows raw keypress input needs cross-platform verification
+before the Windows release can be confirmed as fully supported.
+
+TBD-04: Additional Servants. Expanding the roster beyond the current
+16 Servants (9 FSN + 7 Zero) has not been scoped or scheduled.
