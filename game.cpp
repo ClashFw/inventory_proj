@@ -5,6 +5,7 @@
 #include <vector>
 #include <cstdlib>
 #include <algorithm>
+#include <set>
 #include <cstdio>
 #include <cctype>
 
@@ -112,6 +113,12 @@ static std::string rankBar(int val, int maxVal, int pips) {
 // Track which Holy Grail Wars have been cleared
 static bool g_zeroCleared = false;
 static bool g_stayCleared = false;
+
+// Per-war winner & defeated sets for gallery colouring
+static std::string           g_zeroWinner;
+static std::string           g_stayWinner;
+static std::set<std::string> g_zeroDefeated;
+static std::set<std::string> g_stayDefeated;
 
 static const char* seriesLabel(Series s) {
     switch (s) {
@@ -401,8 +408,14 @@ void Game::showRenamingScreen() {
 
         int key = (int)getSingleChar();
         if (key == 10 || key == 13) { // Enter
-            if (!input.empty()) masterName = input;
-            showServantProfile(*player->getServant());
+            if (!input.empty()) {
+                masterName = input;
+                Servant chosen = servantForMasterName(input);
+                player->setServant(chosen);
+                showServantProfile(chosen);
+            } else {
+                showServantProfile(*player->getServant());
+            }
             return;
         } else if (key == 27) {
             showServantProfile(*player->getServant());
@@ -452,26 +465,28 @@ void Game::showEnemyGallery() {
 
         if (i < (int)stay.size()) {
             const Servant& sv = stay[i];
-            bool defeated = (defeatedEnemies.find(sv.getName()) != defeatedEnemies.end());
-
-            if (defeated)
-                leftName = std::string(" ") + C_RED + sv.getName() + " [DEFEATED]" + C_RESET;
+            bool defeated = (g_stayDefeated.find(sv.getName()) != g_stayDefeated.end());
+            bool winner   = (!g_stayWinner.empty() && sv.getName() == g_stayWinner);
+            if (winner)
+                leftName = std::string(" ") + C_GREEN + "\u2605 " + sv.getName() + " [WINNER]" + C_RESET;
+            else if (defeated)
+                leftName = std::string(" ") + C_RED + sv.getName() + " [FALLEN]" + C_RESET;
             else
                 leftName = std::string(" ") + C_GOLD + sv.getName() + C_RESET;
-
             leftMaster = std::string(" ")
                        + C_DIM "M: " C_CYAN + sv.getMasterName() + C_RESET;
         }
 
         if (i < (int)zero.size()) {
             const Servant& sv = zero[i];
-            bool defeated = (defeatedEnemies.find(sv.getName()) != defeatedEnemies.end());
-
-            if (defeated)
-                rightName = std::string(" ") + C_RED + sv.getName() + " [DEFEATED]" + C_RESET;
+            bool defeated = (g_zeroDefeated.find(sv.getName()) != g_zeroDefeated.end());
+            bool winner   = (!g_zeroWinner.empty() && sv.getName() == g_zeroWinner);
+            if (winner)
+                rightName = std::string(" ") + C_GREEN + "\u2605 " + sv.getName() + " [WINNER]" + C_RESET;
+            else if (defeated)
+                rightName = std::string(" ") + C_RED + sv.getName() + " [FALLEN]" + C_RESET;
             else
                 rightName = std::string(" ") + C_GOLD + sv.getName() + C_RESET;
-
             rightMaster = std::string(" ")
                         + C_DIM "M: " C_CYAN + sv.getMasterName() + C_RESET;
         }
@@ -1070,8 +1085,13 @@ void Game::playBattleArena() {
 
         if (pool.empty()) {
             Series curSeries = myServant->getSeries();
-            if (curSeries == Series::Zero)      g_zeroCleared = true;
-            else if (curSeries == Series::StayNight) g_stayCleared = true;
+            if (curSeries == Series::Zero) {
+                g_zeroCleared = true;
+                g_zeroWinner  = myServant->getName();
+            } else if (curSeries == Series::StayNight) {
+                g_stayCleared = true;
+                g_stayWinner  = myServant->getName();
+            }
 
             cout << C_GOLD "  All servants of this Holy Grail War have been defeated!"
                  << C_RESET << "\n";
@@ -1095,11 +1115,8 @@ void Game::playBattleArena() {
             cout << C_DIM   "  Press any key to accept this calling..." C_RESET << "\n";
             getSingleChar();
 
-            auto nextPool = Servant::enemyPoolForSeries(nextSeries);
-            if (!nextPool.empty()) {
-                Servant nextServant = nextPool[std::rand() % (int)nextPool.size()];
-                player->setServant(nextServant);
-            }
+            // Set a random fallback; showRenamingScreen may override via name lookup
+            player->setServant(Servant::randomServantForSeries(nextSeries));
 
             defeatedEnemies.clear();
             showRenamingScreen();
@@ -1116,6 +1133,11 @@ void Game::playBattleArena() {
         bool won = battleOneEnemy(enemy);
         if (won) {
             defeatedEnemies.insert(enemy.getServant().getName());
+            // Persist per-series for gallery
+            if (myServant->getSeries() == Series::Zero)
+                g_zeroDefeated.insert(enemy.getServant().getName());
+            else
+                g_stayDefeated.insert(enemy.getServant().getName());
 
             // Calculate gold reward from enemy stats
             const Servant& es = enemy.getServant();
