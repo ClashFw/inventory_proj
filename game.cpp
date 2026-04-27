@@ -114,9 +114,11 @@ static std::string rankBar(int val, int maxVal, int pips) {
 static bool g_zeroCleared = false;
 static bool g_stayCleared = false;
 
-// Per-war winner & defeated sets for gallery colouring
+// Per-war winner, master names & defeated sets for gallery colouring
 static std::string           g_zeroWinner;
 static std::string           g_stayWinner;
+static std::string           g_zeroMasterName;
+static std::string           g_stayMasterName;
 static std::set<std::string> g_zeroDefeated;
 static std::set<std::string> g_stayDefeated;
 
@@ -451,6 +453,11 @@ void Game::showEnemyGallery() {
     cout << padRight(leftHeader,  LEFT_W)
          << "  "
          << padRight(rightHeader, RIGHT_W) << "\n";
+    // Legend
+    cout << " " C_CYAN "\u25b6 YOU" C_RESET
+         << "  " C_GREEN "\u2605 WINNER" C_RESET
+         << "  " C_RED "FALLEN" C_RESET
+         << "  " C_GOLD "ALIVE" C_RESET << "\n";
 
     cout << padRight(string(" ") + C_DIM + rep(BD_H, LEFT_W - 2)  + C_RESET, LEFT_W)
          << "  "
@@ -465,30 +472,46 @@ void Game::showEnemyGallery() {
 
         if (i < (int)stay.size()) {
             const Servant& sv = stay[i];
-            bool defeated = (g_stayDefeated.find(sv.getName()) != g_stayDefeated.end());
-            bool winner   = (!g_stayWinner.empty() && sv.getName() == g_stayWinner);
-            if (winner)
+            bool defeated  = (g_stayDefeated.find(sv.getName()) != g_stayDefeated.end());
+            bool winner    = (!g_stayWinner.empty() && sv.getName() == g_stayWinner);
+            // Is this the servant the player is currently commanding?
+            bool isCurrent = (player->getServant() &&
+                              player->getServant()->getSeries() == Series::StayNight &&
+                              player->getServant()->getName() == sv.getName());
+            if (isCurrent)
+                leftName = std::string(" ") + C_CYAN + "\u25b6 " + sv.getName() + " [YOU]" + C_RESET;
+            else if (winner)
                 leftName = std::string(" ") + C_GREEN + "\u2605 " + sv.getName() + " [WINNER]" + C_RESET;
             else if (defeated)
                 leftName = std::string(" ") + C_RED + sv.getName() + " [FALLEN]" + C_RESET;
             else
                 leftName = std::string(" ") + C_GOLD + sv.getName() + C_RESET;
-            leftMaster = std::string(" ")
-                       + C_DIM "M: " C_CYAN + sv.getMasterName() + C_RESET;
+            // Master name: show actual war master if known, else canonical
+            std::string stayMN = winner && !g_stayMasterName.empty() ? g_stayMasterName
+                               : isCurrent && !masterName.empty()    ? masterName
+                               : sv.getMasterName();
+            leftMaster = std::string(" ") + C_DIM "M: " C_CYAN + stayMN + C_RESET;
         }
 
         if (i < (int)zero.size()) {
             const Servant& sv = zero[i];
-            bool defeated = (g_zeroDefeated.find(sv.getName()) != g_zeroDefeated.end());
-            bool winner   = (!g_zeroWinner.empty() && sv.getName() == g_zeroWinner);
-            if (winner)
+            bool defeated  = (g_zeroDefeated.find(sv.getName()) != g_zeroDefeated.end());
+            bool winner    = (!g_zeroWinner.empty() && sv.getName() == g_zeroWinner);
+            bool isCurrent = (player->getServant() &&
+                              player->getServant()->getSeries() == Series::Zero &&
+                              player->getServant()->getName() == sv.getName());
+            if (isCurrent)
+                rightName = std::string(" ") + C_CYAN + "\u25b6 " + sv.getName() + " [YOU]" + C_RESET;
+            else if (winner)
                 rightName = std::string(" ") + C_GREEN + "\u2605 " + sv.getName() + " [WINNER]" + C_RESET;
             else if (defeated)
                 rightName = std::string(" ") + C_RED + sv.getName() + " [FALLEN]" + C_RESET;
             else
                 rightName = std::string(" ") + C_GOLD + sv.getName() + C_RESET;
-            rightMaster = std::string(" ")
-                        + C_DIM "M: " C_CYAN + sv.getMasterName() + C_RESET;
+            std::string zeroMN = winner && !g_zeroMasterName.empty() ? g_zeroMasterName
+                               : isCurrent && !masterName.empty()    ? masterName
+                               : sv.getMasterName();
+            rightMaster = std::string(" ") + C_DIM "M: " C_CYAN + zeroMN + C_RESET;
         }
 
         cout << padRight(leftName,  LEFT_W)
@@ -1086,11 +1109,13 @@ void Game::playBattleArena() {
         if (pool.empty()) {
             Series curSeries = myServant->getSeries();
             if (curSeries == Series::Zero) {
-                g_zeroCleared = true;
-                g_zeroWinner  = myServant->getName();
+                g_zeroCleared     = true;
+                g_zeroWinner      = myServant->getName();
+                g_zeroMasterName  = masterName;
             } else if (curSeries == Series::StayNight) {
-                g_stayCleared = true;
-                g_stayWinner  = myServant->getName();
+                g_stayCleared     = true;
+                g_stayWinner      = myServant->getName();
+                g_stayMasterName  = masterName;
             }
 
             cout << C_GOLD "  All servants of this Holy Grail War have been defeated!"
@@ -1117,6 +1142,11 @@ void Game::playBattleArena() {
 
             // Set a random fallback; showRenamingScreen may override via name lookup
             player->setServant(Servant::randomServantForSeries(nextSeries));
+
+            // Reset inventory and gold for the new war
+            player->getInventory()->clear();
+            generateRandomInventory();
+            shop->setPlayerGold(0);
 
             defeatedEnemies.clear();
             showRenamingScreen();
