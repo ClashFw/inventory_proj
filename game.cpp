@@ -479,7 +479,7 @@ void Game::showEnemyGallery() {
                               player->getServant()->getSeries() == Series::StayNight &&
                               player->getServant()->getName() == sv.getName());
             if (isCurrent)
-                leftName = std::string(" ") + C_CYAN + "\u25b6 " + sv.getName() + " [Owner]" + C_RESET;
+                leftName = std::string(" ") + C_CYAN + "\u25b6 " + sv.getName() + " [OWNER]" + C_RESET;
             else if (winner)
                 leftName = std::string(" ") + C_GREEN + "\u2605 " + sv.getName() + " [WINNER]" + C_RESET;
             else if (defeated)
