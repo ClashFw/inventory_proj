@@ -570,7 +570,6 @@ void Game::showMainMenu() {
                  << cols[i] << icons[i] << "  "
                  << (active ? C_WHITE : C_DIM)
                  << labels[i];
-
             int used = 8 + (int)string(labels[i]).size();
             for (int s = used; s < FRAME_W2; ++s) cout << ' ';
 
