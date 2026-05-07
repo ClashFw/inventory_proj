@@ -1234,7 +1234,7 @@ bool Game::battleOneEnemy(Enemy& enemy) {
         if (pPad < 0) pPad = 0;
         pHeaderName += string(pPad, ' ') + C_BLUE " \u2551" C_RESET;
         string pHeaderHpBar =
-            string(C_BLUE "\u2551 ") + hpBar(pHP, pMaxHP, PANEL_W - 4, C_GREEN, C_DIM)
+            string(C_BLUE "\u2551 ") + hpBar(pHP, pMaxHP, PANEL_W - 2, C_GREEN, C_DIM)
             + C_BLUE " \u2551" C_RESET;
         string pHeaderBottom =
             string(C_BLUE "\u255a") + rep(BD_DH, PANEL_W) + "\u255d" C_RESET;
@@ -1250,7 +1250,7 @@ bool Game::battleOneEnemy(Enemy& enemy) {
         if (ePad < 0) ePad = 0;
         eHeaderName += string(ePad, ' ') + C_RED " \u2551" C_RESET;
         string eHeaderHpBar =
-            string(C_RED "\u2551 ") + hpBar(eHP, en.getMaxHP(), PANEL_W - 4, C_ORANGE, C_DIM)
+            string(C_RED "\u2551 ") + hpBar(eHP, en.getMaxHP(), PANEL_W -2 , C_ORANGE, C_DIM)
             + C_RED " \u2551" C_RESET;
         string eHeaderBottom =
             string(C_RED "\u255a") + rep(BD_DH, PANEL_W) + "\u255d" C_RESET;
