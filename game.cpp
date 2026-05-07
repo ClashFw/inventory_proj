@@ -317,6 +317,7 @@ void Game::showServantProfile(const Servant& sv) {
 void Game::showNamingScreen() {
     std::string input;
     const int FRAME_W = 53;
+    const int FRAME_W2 = 52;
 
     while (true) {
         printf("\033[2J"); printf("\033[H"); fflush(stdout);
@@ -338,7 +339,7 @@ void Game::showNamingScreen() {
         cout << C_GOLD BD_DV << C_WHITE "  Name: " << C_CYAN << input << C_DIM << "_"
              << C_RESET;
         int used = 8 + (int)input.size();
-        for (int i = used; i < FRAME_W; ++i) cout << ' ';
+        for (int i = used; i < FRAME_W2; ++i) cout << ' ';
         cout << C_GOLD BD_DV C_RESET << "\n";
 
         cout << C_GOLD BD_DLT << rep(BD_DH, FRAME_W) << BD_DRT C_RESET << "\n";
@@ -378,6 +379,7 @@ void Game::showNamingScreen() {
 void Game::showRenamingScreen() {
     std::string input;
     const int FRAME_W = 53;
+    const int FRAME_W2 = 52;
 
     while (true) {
         printf("\033[2J"); printf("\033[H"); fflush(stdout);
@@ -399,7 +401,7 @@ void Game::showRenamingScreen() {
         cout << C_GOLD BD_DV << C_WHITE "  Name: " << C_CYAN << input << C_DIM << "_"
              << C_RESET;
         int used = 8 + (int)input.size();
-        for (int i = used; i < FRAME_W; ++i) cout << ' ';
+        for (int i = used; i < FRAME_W2; ++i) cout << ' ';
         cout << C_GOLD BD_DV C_RESET << "\n";
 
         cout << C_GOLD BD_DLT << rep(BD_DH, FRAME_W) << BD_DRT C_RESET << "\n";
@@ -535,7 +537,7 @@ void Game::showMainMenu() {
     int sel = 0;
     const int OPTIONS = 5;
     const int FRAME_W = 35;
-
+    const int FRAME_W2 = 36;
     while (true) {
         printf("\033[2J"); printf("\033[H"); fflush(stdout);
 
@@ -548,13 +550,13 @@ void Game::showMainMenu() {
         if (!masterName.empty()) {
             cout << C_GOLD BD_DV << C_DIM "  Master: " << C_WHITE << masterName;
             int used = 11 + (int)masterName.size();
-            for (int i = used; i < FRAME_W; ++i) cout << ' ';
+            for (int i = used; i < FRAME_W2; ++i) cout << ' ';
             cout << C_GOLD BD_DV C_RESET << "\n";
             cout << C_GOLD BD_DLT << rep(BD_DH, FRAME_W) << BD_DRT C_RESET << "\n";
         }
 
         const char* labels[OPTIONS] = {
-            "  Inventory  ", "  Shop     ", "  Battle   ", "  Gallery  ", "  Quit     "
+            "  Inventory  ", "  Shop     ", "  Battle   ", " Gallery ", "  Quit     "
         };
         const char* icons[OPTIONS]  = { "\u2696", "\u2741", "\u2694", "\u24c8", "\u00d7" };
         const char* cols[OPTIONS]   = { C_CYAN, C_GOLD, C_BRED, C_MGENTA, C_DIM };
@@ -570,7 +572,7 @@ void Game::showMainMenu() {
                  << labels[i];
 
             int used = 8 + (int)string(labels[i]).size();
-            for (int s = used; s < FRAME_W; ++s) cout << ' ';
+            for (int s = used; s < FRAME_W2; ++s) cout << ' ';
 
             cout << C_GOLD << BD_DV << C_RESET << "\n";
         }
