@@ -772,7 +772,7 @@ void Game::playShop() {
         if (fv) shop->displayShopWithSearch(); else shop->displayShop();
         cout << "\n";
         cout << C_DIM "  1-Common  2-Magic  3-Rare  4-Potion  5-Sword  6-Armor  7-Move  0-Clear\n";
-        cout << "  F-Search  R-Restock  V-Sell  B-Buy  W/S-Navigate  E-Exit" C_RESET "\n";
+        cout << "  F-Search  R-Restock    B-Buy  W/S-Navigate  E-Exit" C_RESET "\n";
 
         userInput = (int)getSingleChar();
         switch (userInput) {
@@ -807,7 +807,6 @@ void Game::playShop() {
                 cout << C_GREEN "\n  Shop restocked!" C_RESET "\n  Press any key...\n";
                 getSingleChar();
                 break;
-            case 'v': case 'V': sellItemsMenu(); break;
             case '1': shop->setRarityFilter(common);   break;
             case '2': shop->setRarityFilter(magic);    break;
             case '3': shop->setRarityFilter(rare);     break;

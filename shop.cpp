@@ -175,7 +175,7 @@ void Shop::displayShop() {
     std::cout << GOLD DV LGOLD "  \u2741  SHOP OF CHALDEA  \u2741  "
               << DIM "Treasury: " GOLD << playerGold << "g";
     int gl = 38 + (int)std::to_string(playerGold).size();
-    for (int i = gl; i < 69; i++) std::cout << ' ';
+    for (int i = gl; i < 72; i++) std::cout << ' ';
     std::cout << GOLD DV RST "\n";
     std::cout << GOLD DLT << rep(DH, 70) << DRT RST "\n";
 
