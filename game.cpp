@@ -386,15 +386,15 @@ void Game::showRenamingScreen() {
 
         cout << C_GOLD BD_DTL << rep(BD_DH, FRAME_W) << BD_DTR C_RESET << "\n";
         cout << C_GOLD BD_DV
-             << C_LGOLD "      ❁  NEW MASTER REGISTRATION  ❁            "
+             << C_LGOLD "      ❁  NEW MASTER REGISTRATION  ❁                 "
              << C_GOLD BD_DV C_RESET << "\n";
         cout << C_GOLD BD_DLT << rep(BD_DH, FRAME_W) << BD_DRT C_RESET << "\n";
 
         cout << C_GOLD BD_DV << C_DIM
-             "  You are summoned to a new Holy Grail War.        "
+             "  You are summoned to a new Holy Grail War.          "
              << C_GOLD BD_DV C_RESET << "\n";
         cout << C_GOLD BD_DV << C_DIM
-             "  Enter your name as this war's new Master.       "
+             "  Enter your name as this war's new Master.          "
              << C_GOLD BD_DV C_RESET << "\n";
         cout << C_GOLD BD_DLT << rep(BD_DH, FRAME_W) << BD_DRT C_RESET << "\n";
 
@@ -406,7 +406,7 @@ void Game::showRenamingScreen() {
 
         cout << C_GOLD BD_DLT << rep(BD_DH, FRAME_W) << BD_DRT C_RESET << "\n";
         cout << C_GOLD BD_DV << C_DIM
-             "  Enter - Confirm     Esc - Keep name             "
+             "  Enter - Confirm     Esc - Keep name                "
              << C_GOLD BD_DV C_RESET << "\n";
         cout << C_GOLD BD_DBL << rep(BD_DH, FRAME_W) << BD_DBR C_RESET << "\n";
 
