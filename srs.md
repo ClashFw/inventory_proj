@@ -102,9 +102,7 @@ A player familiar with the game's systems who uses advanced features: simultaneo
 
 | Platform | Version | Notes |
 |---|---|---|
-| **Windows** | 10 / 11 | Terminal with ANSI escape support (Windows Terminal, PowerShell). Uses `conio.h`. |
 | **macOS** | 10.15 Catalina and later | Terminal.app or iTerm2. Uses `termios.h`. |
-| **Linux** | Ubuntu 20.04+, Debian 10+ | Standard terminal emulator with ANSI support. Uses `termios.h`. |
 | **Build Tools** | CMake 3.16+, C++17 compiler (GCC 9+, Clang 10+, MSVC 2019+) | Required on all platforms. |
 
 ### 2.5 Design and Implementation Constraints
