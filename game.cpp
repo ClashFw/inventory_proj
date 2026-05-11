@@ -828,7 +828,7 @@ void Game::sellItemsMenu() {
     int userInput = 0;
     while (userInput != 'e' && userInput != 'E') {
         printf("\033[2J"); printf("\033[H"); fflush(stdout);
-        cout << C_GOLD << fgoRule("SELL ITEMS", 38, C_DGOLD) << C_RESET << "\n";
+        cout << C_GOLD << fgoRule("SELL ITEMS", 36, C_DGOLD) << C_RESET << "\n";
         cout << C_DIM "  Treasury: " C_GOLD << shop->getPlayerGold() << "g" C_RESET << "\n\n";
         player->getInventory()->display();
 
